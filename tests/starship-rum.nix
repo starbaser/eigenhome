@@ -1,6 +1,9 @@
-# Test: HM starship module (standalone, no rum)
+# Test: HM starship module with rum zsh active.
+# Verifies: starship shell init routes through rum.programs.zsh.initConfig
+# instead of standalone files.
 {
   hjemModule,
+  hjemRumModule,
   hjemCompatModule,
   hjemTest,
   hmSrc,
@@ -10,7 +13,7 @@ let
   userHome = "/home/alice";
 in
 hjemTest {
-  name = "hjem-compat-starship";
+  name = "hjem-compat-starship-rum";
   nodes.machine = {
     imports = [ hjemModule ];
 
@@ -25,16 +28,17 @@ hjemTest {
     hjem.users.alice = {
       enable = true;
       imports = [
+        hjemRumModule
         hjemCompatModule
         (wrapHmModule "${hmSrc}/modules/programs/starship.nix")
       ];
 
+      # Enable rum's zsh module
+      rum.programs.zsh.enable = true;
+
       programs.starship = {
         enable = true;
-        settings = {
-          add_newline = false;
-          character.success_symbol = "[>](bold green)";
-        };
+        settings.add_newline = false;
       };
     };
   };
@@ -45,17 +49,16 @@ hjemTest {
 
     machine.succeed("su alice --login --command 'which starship'")
 
+    # Starship config file should exist
     machine.succeed("test -e ${userHome}/.config/starship.toml")
-    machine.succeed("grep 'add_newline' ${userHome}/.config/starship.toml")
 
-    # Shell init (standalone fallback — no rum)
-    machine.succeed("test -e ${userHome}/.config/zsh/hm-compat.zsh")
-    machine.succeed("grep 'starship init zsh' ${userHome}/.config/zsh/hm-compat.zsh")
+    # With rum zsh active, starship init should be in .zshrc (via rum),
+    # NOT in the standalone hm-compat.zsh file
+    machine.succeed("grep 'starship init zsh' ${userHome}/.zshrc")
+    machine.fail("test -e ${userHome}/.config/zsh/hm-compat.zsh")
 
+    # Bash/fish should still use standalone (no rum modules for those)
     machine.succeed("test -e ${userHome}/.config/bash/hm-compat.sh")
-    machine.succeed("grep 'starship init bash' ${userHome}/.config/bash/hm-compat.sh")
-
     machine.succeed("test -e ${userHome}/.config/fish/conf.d/hm-compat.fish")
-    machine.succeed("grep 'starship init fish' ${userHome}/.config/fish/conf.d/hm-compat.fish")
   '';
 }

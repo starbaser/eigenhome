@@ -9,6 +9,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    hjem-rum = {
+      url = "github:feel-co/hjem-rum";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.hjem.follows = "hjem";
+    };
+
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -20,6 +26,7 @@
       self,
       nixpkgs,
       hjem,
+      hjem-rum,
       home-manager,
       ...
     }:
@@ -39,7 +46,7 @@
       checks = forAllSystems (
         system:
         import ./tests {
-          inherit self hjem home-manager;
+          inherit self hjem hjem-rum home-manager;
           pkgs = nixpkgs.legacyPackages.${system};
         }
       );

@@ -2,14 +2,21 @@
   pkgs,
   self ? ../.,
   hjem,
+  hjem-rum,
   home-manager,
 }:
 let
-  system = pkgs.system;
-
   hjemModule = hjem.nixosModules.default;
+  hjemRumModule = hjem-rum.hjemModules.default;
   hjemCompatModule = import "${self}/modules" { inherit home-manager; };
   hmSrc = "${home-manager}";
+
+  hmExtLib = pkgs.lib.extend (
+    self: super: {
+      hm = import "${home-manager}/modules/lib" { lib = self; };
+    }
+  );
+  wrapHmModule = import "${self}/modules/wrap-hm-module.nix" { inherit hmExtLib; };
 
   hjemTest =
     test:
@@ -24,14 +31,18 @@ in
   };
 
   starship = pkgs.callPackage ./starship.nix {
-    inherit hjemModule hjemCompatModule hjemTest hmSrc;
+    inherit hjemModule hjemCompatModule hjemTest hmSrc wrapHmModule;
+  };
+
+  starship-rum = pkgs.callPackage ./starship-rum.nix {
+    inherit hjemModule hjemRumModule hjemCompatModule hjemTest hmSrc wrapHmModule;
   };
 
   git = pkgs.callPackage ./git.nix {
-    inherit hjemModule hjemCompatModule hjemTest hmSrc;
+    inherit hjemModule hjemCompatModule hjemTest hmSrc wrapHmModule;
   };
 
   direnv = pkgs.callPackage ./direnv.nix {
-    inherit hjemModule hjemCompatModule hjemTest hmSrc;
+    inherit hjemModule hjemCompatModule hjemTest hmSrc wrapHmModule;
   };
 }
