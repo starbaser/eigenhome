@@ -10,39 +10,40 @@
 let
   inherit (lib)
     filterAttrs
-    mapAttrs
+    listToAttrs
+    mapAttrsToList
     mkIf
     ;
 
-  # Translate a single HM file entry to a hjem file entry.
-  # HM: enable, target, text, source, executable (nullOr bool), recursive, onChange, force
-  # Hjem: enable, type, target, text, source, executable (bool), clobber
-  #
-  # HM's file-type.nix auto-derives source from text. To avoid conflict with
-  # hjem's own text→source derivation, we pass only source (not text) when
-  # HM has already resolved it.
+  # Translate HM file entries to hjem file entries.
+  # Uses the HM entry's resolved `target` as the hjem key, since HM modules
+  # often use absolute paths as attrset keys (e.g., "${config.xdg.configHome}/starship.toml")
+  # which HM's file-type.nix resolves to relative paths in `target`.
   translateFileEntry = _name: entry: {
-    inherit (entry) enable;
-    source = entry.source;
-    executable = if entry.executable == true then true else false;
-    clobber = entry.force;
+    name = entry.target;
+    value = {
+      inherit (entry) enable;
+      source = entry.source;
+      executable = if entry.executable == true then true else false;
+      clobber = entry.force;
+    };
   };
 
   translateFileSet = fileSet:
-    mapAttrs translateFileEntry (filterAttrs (_: e: e.enable) fileSet);
+    listToAttrs (
+      mapAttrsToList translateFileEntry (filterAttrs (_: e: e.enable) fileSet)
+    );
 
   hasFiles = set: (filterAttrs (_: e: e.enable) set) != { };
 in
 {
   config = {
-    # Derive read-only HM identity values from hjem config.
     home = {
       username = config.user;
       homeDirectory = config.directory;
       profileDirectory = "/etc/profiles/per-user/${config.user}";
     };
 
-    # Derive XDG paths from hjem's xdg.*.directory options.
     xdg = {
       configHome = config.xdg.config.directory;
       dataHome = config.xdg.data.directory;
