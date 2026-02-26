@@ -39,7 +39,8 @@ hjemTest {
 
   testScript = ''
     machine.succeed("loginctl enable-linger alice")
-    machine.wait_until_succeeds("systemctl --user --machine=alice@ is-active systemd-tmpfiles-setup.service")
+    machine.wait_until_succeeds("test -d /run/user/$(id -u alice)")
+    machine.wait_until_succeeds("sudo -u alice XDG_RUNTIME_DIR=/run/user/$(id -u alice) systemctl --user is-active systemd-tmpfiles-setup.service")
 
     machine.succeed("su alice --login --command 'which direnv'")
 

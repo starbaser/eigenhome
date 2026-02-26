@@ -28,6 +28,15 @@ in
     # HM's gpg module — git.nix reads config.programs.gpg.package for signing defaults.
     programs.gpg.package = lib.mkPackageOption pkgs "gnupg" { };
 
+    # HM's git module reads config.programs.${name}.enable for external diff tools.
+    # These would normally be defined by their own HM modules (delta.nix, etc.).
+    programs.delta.enable = lib.mkEnableOption "delta";
+    programs.diff-so-fancy.enable = lib.mkEnableOption "diff-so-fancy";
+    programs.difftastic.enable = lib.mkEnableOption "difftastic";
+    programs.diff-highlight.enable = lib.mkEnableOption "diff-highlight";
+    programs.patdiff.enable = lib.mkEnableOption "patdiff";
+    programs.riff.enable = lib.mkEnableOption "riff";
+
     # HM's systemd.user.* — accepts writes from HM modules.
     # Not bridged to hjem's systemd.* to avoid type conflicts.
     # Users who need systemd services should configure them through hjem directly.

@@ -15,23 +15,38 @@ let
     mkIf
     ;
 
-  # Translate HM file entries to hjem file entries.
-  # Uses the HM entry's resolved `target` as the hjem key, since HM modules
-  # often use absolute paths as attrset keys (e.g., "${config.xdg.configHome}/starship.toml")
-  # which HM's file-type.nix resolves to relative paths in `target`.
-  translateFileEntry = _name: entry: {
-    name = entry.target;
-    value = {
-      inherit (entry) enable;
-      source = entry.source;
-      executable = if entry.executable == true then true else false;
-      clobber = entry.force;
-    };
+  # Translate an HM file entry value to hjem file entry value.
+  translateFileValue = entry: {
+    inherit (entry) enable;
+    source = entry.source;
+    executable = if entry.executable == true then true else false;
+    clobber = entry.force;
   };
 
-  translateFileSet = fileSet:
+  # For home.file: use entry.target as key (relative to $HOME), since HM modules
+  # often use absolute paths as attrset keys which file-type.nix resolves to
+  # relative paths in `target`.
+  translateHomeFileSet = fileSet:
     listToAttrs (
-      mapAttrsToList translateFileEntry (filterAttrs (_: e: e.enable) fileSet)
+      mapAttrsToList (
+        _name: entry: {
+          name = entry.target;
+          value = translateFileValue entry;
+        }
+      ) (filterAttrs (_: e: e.enable) fileSet)
+    );
+
+  # For xdg.*File: use the original attr key (already relative to the XDG dir).
+  # entry.target is relative to $HOME (e.g. ".config/foo"), but hjem's
+  # xdg.config.files expects keys relative to the XDG dir (e.g. "foo").
+  translateXdgFileSet = fileSet:
+    listToAttrs (
+      mapAttrsToList (
+        name: entry: {
+          inherit name;
+          value = translateFileValue entry;
+        }
+      ) (filterAttrs (_: e: e.enable) fileSet)
     );
 
   hasFiles = set: (filterAttrs (_: e: e.enable) set) != { };
@@ -52,19 +67,19 @@ in
     };
 
     # --- File translation ---
-    files = mkIf (hasFiles config.home.file) (translateFileSet config.home.file);
+    files = mkIf (hasFiles config.home.file) (translateHomeFileSet config.home.file);
 
     xdg.config.files =
-      mkIf (hasFiles config.xdg.configFile) (translateFileSet config.xdg.configFile);
+      mkIf (hasFiles config.xdg.configFile) (translateXdgFileSet config.xdg.configFile);
 
     xdg.data.files =
-      mkIf (hasFiles config.xdg.dataFile) (translateFileSet config.xdg.dataFile);
+      mkIf (hasFiles config.xdg.dataFile) (translateXdgFileSet config.xdg.dataFile);
 
     xdg.cache.files =
-      mkIf (hasFiles config.xdg.cacheFile) (translateFileSet config.xdg.cacheFile);
+      mkIf (hasFiles config.xdg.cacheFile) (translateXdgFileSet config.xdg.cacheFile);
 
     xdg.state.files =
-      mkIf (hasFiles config.xdg.stateFile) (translateFileSet config.xdg.stateFile);
+      mkIf (hasFiles config.xdg.stateFile) (translateXdgFileSet config.xdg.stateFile);
 
     # --- Package translation ---
     packages = config.home.packages;
