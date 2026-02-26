@@ -1,7 +1,6 @@
 # config.lib.* helpers that HM modules read.
-# Provides config.lib.file.mkOutOfStoreSymlink and config.lib.shell.exportAll.
 {
-  config,
+  hmExtLib,
   lib,
   ...
 }:
@@ -38,6 +37,6 @@ in
 
   config.lib = {
     file.mkOutOfStoreSymlink = path: "${path}";
-    shell.exportAll = lib.hm.shell.exportAll;
+    shell.exportAll = hmExtLib.hm.shell.exportAll;
   };
 }

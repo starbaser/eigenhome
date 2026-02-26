@@ -1,18 +1,19 @@
 # HM-compatible xdg.* option declarations.
-# HM modules read xdg.configHome etc. and write to xdg.configFile etc.
-# These are the HM-named options; translation.nix wires them to hjem equivalents.
+# Uses hmExtLib for HM file-type.nix import.
 {
   config,
+  hmExtLib,
   hmSrc,
   lib,
   pkgs,
   ...
 }:
 let
-  inherit (lib) mkDefault mkOption types;
+  inherit (lib) mkOption types;
 
   hmFileType = import "${hmSrc}/modules/lib/file-type.nix" {
-    inherit lib pkgs;
+    lib = hmExtLib;
+    inherit pkgs;
     homeDirectory = config.home.homeDirectory;
   };
 in

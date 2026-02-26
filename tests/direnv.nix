@@ -1,13 +1,21 @@
-# Test: Import HM's direnv module unmodified.
-# Verifies: config file, shell hooks, nix-direnv integration.
+# Test: Import HM's direnv module via wrapHmModule.
 {
   hjemModule,
   hjemCompatModule,
   hjemTest,
   hmSrc,
+  lib,
+  pkgs,
 }:
 let
   userHome = "/home/alice";
+
+  hmExtLib = pkgs.lib.extend (
+    self: super: {
+      hm = import "${hmSrc}/modules/lib" { lib = self; };
+    }
+  );
+  wrapHmModule = import ../modules/wrap-hm-module.nix { inherit hmExtLib; };
 in
 hjemTest {
   name = "hjem-compat-direnv";
@@ -27,7 +35,7 @@ hjemTest {
         enable = true;
         imports = [
           hjemCompatModule
-          "${hmSrc}/modules/programs/direnv.nix"
+          (wrapHmModule "${hmSrc}/modules/programs/direnv.nix")
         ];
 
         programs.direnv = {

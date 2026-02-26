@@ -1,7 +1,8 @@
 # HM-compatible home.* option declarations.
-# Provides the option surface that HM program modules expect to read from and write to.
+# Uses hmExtLib (lib extended with lib.hm) for HM file-type.nix import.
 {
   config,
+  hmExtLib,
   hmSrc,
   lib,
   pkgs,
@@ -13,9 +14,10 @@ let
     types
     ;
 
-  # Import HM's file-type.nix to get the exact type definition HM modules expect.
+  # Import HM's file-type.nix with the extended lib that includes lib.hm.
   hmFileType = import "${hmSrc}/modules/lib/file-type.nix" {
-    inherit lib pkgs;
+    lib = hmExtLib;
+    inherit pkgs;
     homeDirectory = config.home.homeDirectory;
   };
 in
@@ -49,7 +51,6 @@ in
       description = "Extra directories to prepend to PATH.";
     };
 
-    # Read-only identity — derived from hjem config in translation.nix.
     username = mkOption {
       type = types.str;
       readOnly = true;
@@ -76,7 +77,7 @@ in
 
     # Activation scripts — collected but not executed by hjem.
     activation = mkOption {
-      type = lib.hm.types.dagOf types.str;
+      type = hmExtLib.hm.types.dagOf types.str;
       default = { };
       description = "DAG of activation scripts (collected, not executed).";
     };

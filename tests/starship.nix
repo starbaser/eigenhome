@@ -1,13 +1,24 @@
-# Test: Import HM's starship module unmodified.
+# Test: Import HM's starship module via wrapHmModule.
 # Verifies: config file, package in PATH, session variable, shell init content.
 {
   hjemModule,
   hjemCompatModule,
   hjemTest,
   hmSrc,
+  lib,
+  pkgs,
 }:
 let
   userHome = "/home/alice";
+
+  # Construct the wrapper at test level (since _module.args from imports
+  # aren't available in the outer user function arguments).
+  hmExtLib = pkgs.lib.extend (
+    self: super: {
+      hm = import "${hmSrc}/modules/lib" { lib = self; };
+    }
+  );
+  wrapHmModule = import ../modules/wrap-hm-module.nix { inherit hmExtLib; };
 in
 hjemTest {
   name = "hjem-compat-starship";
@@ -27,7 +38,7 @@ hjemTest {
         enable = true;
         imports = [
           hjemCompatModule
-          "${hmSrc}/modules/programs/starship.nix"
+          (wrapHmModule "${hmSrc}/modules/programs/starship.nix")
         ];
 
         programs.starship = {
@@ -52,9 +63,6 @@ hjemTest {
     machine.succeed("test -e ${userHome}/.config/starship.toml")
     machine.succeed("grep 'add_newline' ${userHome}/.config/starship.toml")
     machine.succeed("grep 'success_symbol' ${userHome}/.config/starship.toml")
-
-    # Verify STARSHIP_CONFIG session variable was set
-    # (it gets exported via hjem's loadEnv mechanism)
 
     # Verify shell init content was generated (standalone fallback since no rum)
     machine.succeed("test -e ${userHome}/.config/zsh/hm-compat.zsh")

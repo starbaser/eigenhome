@@ -1,13 +1,21 @@
-# Test: Import HM's git module unmodified.
-# Verifies: git config file, ignore file, packages.
+# Test: Import HM's git module via wrapHmModule.
 {
   hjemModule,
   hjemCompatModule,
   hjemTest,
   hmSrc,
+  lib,
+  pkgs,
 }:
 let
   userHome = "/home/alice";
+
+  hmExtLib = pkgs.lib.extend (
+    self: super: {
+      hm = import "${hmSrc}/modules/lib" { lib = self; };
+    }
+  );
+  wrapHmModule = import ../modules/wrap-hm-module.nix { inherit hmExtLib; };
 in
 hjemTest {
   name = "hjem-compat-git";
@@ -27,7 +35,7 @@ hjemTest {
         enable = true;
         imports = [
           hjemCompatModule
-          "${hmSrc}/modules/programs/git.nix"
+          (wrapHmModule "${hmSrc}/modules/programs/git.nix")
         ];
 
         programs.git = {
