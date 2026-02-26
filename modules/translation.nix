@@ -17,9 +17,13 @@ let
   # Translate a single HM file entry to a hjem file entry.
   # HM: enable, target, text, source, executable (nullOr bool), recursive, onChange, force
   # Hjem: enable, type, target, text, source, executable (bool), clobber
+  #
+  # HM's file-type.nix auto-derives source from text. To avoid conflict with
+  # hjem's own text→source derivation, we pass only source (not text) when
+  # HM has already resolved it.
   translateFileEntry = _name: entry: {
-    inherit (entry) enable text source;
-    # HM executable is nullOr bool (null = inherit from source); hjem is bool
+    inherit (entry) enable;
+    source = entry.source;
     executable = if entry.executable == true then true else false;
     clobber = entry.force;
   };
