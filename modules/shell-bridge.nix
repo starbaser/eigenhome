@@ -5,6 +5,7 @@
 {
   config,
   lib,
+  options,
   ...
 }:
 let
@@ -13,14 +14,14 @@ let
     mapAttrsToList
     mkAfter
     mkIf
+    optionalAttrs
     optionalString
     ;
 
-  # Safe rum detection: returns false when rum modules aren't loaded (path missing),
-  # false when disabled, true when enabled.
-  rumEnabled = path: lib.attrByPath (path ++ [ "enable" ]) false config;
+  # Detect whether rum modules are loaded by checking if the option path exists.
+  hasRum = options ? rum;
+  rumEnabled = path: hasRum && lib.attrByPath (path ++ [ "enable" ]) false config;
 
-  # Merge global + per-shell aliases into shell-appropriate syntax.
   allAliases = shell:
     config.home.shellAliases
     // (lib.attrByPath [ "programs" shell "shellAliases" ] { } config);
@@ -40,7 +41,6 @@ let
       mapAttrsToList (n: v: "abbr --add -- ${lib.escapeShellArg n} ${lib.escapeShellArg v}") config.programs.fish.shellAbbrs
     );
 
-  # Content aggregators per shell.
   zsh = {
     hasContent =
       config.programs.zsh.initContent != ""
@@ -115,89 +115,84 @@ let
   rumNushell = rumEnabled [ "rum" "programs" "nushell" ];
 in
 {
-  config = {
-    # --- Zsh routing ---
-    rum.programs.zsh.initConfig = mkIf (rumZsh && zsh.hasContent) (mkAfter zsh.content);
+  config =
+    {
+      xdg.config.files = lib.mkMerge [
+        # Zsh
+        (mkIf (!rumZsh && zsh.hasContent) {
+          "zsh/hm-compat.zsh".text = zsh.content;
+        })
+        (mkIf zshEnv.hasContent {
+          "zsh/hm-compat-env.zsh".text = zshEnv.content;
+        })
+        (mkIf zshLogin.hasContent {
+          "zsh/hm-compat-login.zsh".text = zshLogin.content;
+        })
+        (mkIf zshLogout.hasContent {
+          "zsh/hm-compat-logout.zsh".text = zshLogout.content;
+        })
 
-    # Standalone zsh fallback (when rum zsh is not active)
-    xdg.config.files = lib.mkMerge [
-      (mkIf (!rumZsh && zsh.hasContent) {
-        "zsh/hm-compat.zsh".text = zsh.content;
-      })
-      (mkIf (!rumZsh && zshEnv.hasContent) {
-        "zsh/hm-compat-env.zsh".text = zshEnv.content;
-      })
-      (mkIf (zshLogin.hasContent) {
-        "zsh/hm-compat-login.zsh".text = zshLogin.content;
-      })
-      (mkIf (zshLogout.hasContent) {
-        "zsh/hm-compat-logout.zsh".text = zshLogout.content;
-      })
+        # Bash
+        (mkIf bash.hasContent {
+          "bash/hm-compat.sh".text = bash.content;
+        })
+        (mkIf bashProfile.hasContent {
+          "bash/hm-compat-profile.sh".text = bashProfile.content;
+        })
 
-      # Zsh env via rum (loginConfig doesn't include env, so use standalone for env)
-      (mkIf (rumZsh && zshEnv.hasContent) {
-        "zsh/hm-compat-env.zsh".text = zshEnv.content;
-      })
+        # Fish
+        (mkIf (!rumFish && fish.hasInteractive) {
+          "fish/conf.d/hm-compat.fish".text = fish.interactiveContent;
+        })
+        (mkIf (!rumFish && fish.hasInit) {
+          "fish/conf.d/hm-compat-init.fish".text = fish.initContent;
+        })
+        (mkIf (!rumFish && fish.hasLogin) {
+          "fish/conf.d/hm-compat-login.fish".text = fish.loginContent;
+        })
 
-      # --- Bash routing (no rum module — always standalone) ---
-      (mkIf (bash.hasContent) {
-        "bash/hm-compat.sh".text = bash.content;
-      })
-      (mkIf (bashProfile.hasContent) {
-        "bash/hm-compat-profile.sh".text = bashProfile.content;
-      })
+        # Nushell
+        (mkIf (!rumNushell && nushell.hasConfig) {
+          "nushell/hm-compat.nu".text = nushell.configContent;
+        })
+        (mkIf (!rumNushell && nushell.hasEnv) {
+          "nushell/hm-compat-env.nu".text = nushell.envContent;
+        })
 
-      # --- Fish routing ---
-      # Fish conf.d auto-sources — zero-config for fish users
-      (mkIf (!rumFish && fish.hasInteractive) {
-        "fish/conf.d/hm-compat.fish".text = fish.interactiveContent;
-      })
-      (mkIf (!rumFish && fish.hasInit) {
-        "fish/conf.d/hm-compat-init.fish".text = fish.initContent;
-      })
-      (mkIf (!rumFish && fish.hasLogin) {
-        "fish/conf.d/hm-compat-login.fish".text = fish.loginContent;
-      })
+        # Ion
+        (mkIf (config.programs.ion.initExtra != "") {
+          "ion/hm-compat.ion".text = config.programs.ion.initExtra;
+        })
+      ];
 
-      # --- Nushell routing ---
-      (mkIf (!rumNushell && nushell.hasConfig) {
-        "nushell/hm-compat.nu".text = nushell.configContent;
-      })
-      (mkIf (!rumNushell && nushell.hasEnv) {
-        "nushell/hm-compat-env.nu".text = nushell.envContent;
-      })
+      home.sessionVariables = lib.mkMerge [
+        (mkIf (config.programs.bash.sessionVariables != { }) config.programs.bash.sessionVariables)
+        (mkIf (config.programs.zsh.sessionVariables != { }) config.programs.zsh.sessionVariables)
+      ];
+    }
+    # Rum bridge routes: only included when rum modules are loaded.
+    # optionalAttrs prevents the module system from seeing rum.* option paths
+    # when they don't exist.
+    // optionalAttrs hasRum {
+      rum.programs.zsh.initConfig = mkIf (rumZsh && zsh.hasContent) (mkAfter zsh.content);
 
-      # --- Ion (always standalone, no rum module) ---
-      (mkIf (config.programs.ion.initExtra != "") {
-        "ion/hm-compat.ion".text = config.programs.ion.initExtra;
-      })
-    ];
+      rum.programs.fish.config = mkIf (rumFish && (fish.hasInteractive || fish.hasInit)) (
+        mkAfter (
+          concatStringsSep "\n" [
+            fish.initContent
+            fish.interactiveContent
+          ]
+        )
+      );
 
-    # --- Fish rum bridge ---
-    rum.programs.fish.config = mkIf (rumFish && (fish.hasInteractive || fish.hasInit)) (
-      mkAfter (
-        concatStringsSep "\n" [
-          fish.initContent
-          fish.interactiveContent
-        ]
-      )
-    );
+      rum.programs.fish.earlyConfigFiles = mkIf (rumFish && fish.hasLogin) {
+        "hm-compat-login" = fish.loginContent;
+      };
 
-    rum.programs.fish.earlyConfigFiles = mkIf (rumFish && fish.hasLogin) {
-      "hm-compat-login" = fish.loginContent;
+      rum.programs.nushell.extraConfig =
+        mkIf (rumNushell && nushell.hasConfig) (mkAfter nushell.configContent);
+
+      rum.programs.nushell.envFile =
+        mkIf (rumNushell && nushell.hasEnv) (mkAfter nushell.envContent);
     };
-
-    # --- Nushell rum bridge ---
-    rum.programs.nushell.extraConfig =
-      mkIf (rumNushell && nushell.hasConfig) (mkAfter nushell.configContent);
-
-    rum.programs.nushell.envFile =
-      mkIf (rumNushell && nushell.hasEnv) (mkAfter nushell.envContent);
-
-    # --- Per-shell session variables → home.sessionVariables ---
-    home.sessionVariables = lib.mkMerge [
-      (mkIf (config.programs.bash.sessionVariables != { }) config.programs.bash.sessionVariables)
-      (mkIf (config.programs.zsh.sessionVariables != { }) config.programs.zsh.sessionVariables)
-    ];
-  };
 }
