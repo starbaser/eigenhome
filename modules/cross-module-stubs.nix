@@ -11,6 +11,13 @@ let
 in
 {
   options = {
+    # HM modules set meta.maintainers = []; — accept and discard.
+    meta = mkOption {
+      type = types.attrsOf types.anything;
+      default = { };
+      description = "Module metadata (accepted for compatibility, not used).";
+    };
+
     # HM's accounts module — git.nix reads config.accounts.email.accounts unconditionally.
     accounts.email.accounts = mkOption {
       type = types.attrsOf types.anything;
