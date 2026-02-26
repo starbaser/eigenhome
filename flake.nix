@@ -10,7 +10,7 @@
     };
 
     hjem-rum = {
-      url = "github:feel-co/hjem-rum";
+      url = "github:snugnug/hjem-rum";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.hjem.follows = "hjem";
     };
