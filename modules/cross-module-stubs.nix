@@ -35,11 +35,17 @@ in {
     programs.patdiff.enable = lib.mkEnableOption "patdiff";
     programs.riff.enable = lib.mkEnableOption "riff";
 
-    # Darwin launchd stubs — HM modules conditionally write to these.
+    # Darwin stubs — HM modules conditionally write to these on macOS.
     launchd.agents = mkOption {
       type = types.attrsOf types.anything;
       default = {};
       description = "Stub for HM launchd.agents (not supported on Linux).";
+    };
+
+    targets.darwin.defaults = mkOption {
+      type = types.attrsOf types.anything;
+      default = {};
+      description = "Stub for HM targets.darwin.defaults (not supported on Linux).";
     };
   };
 }

@@ -51,4 +51,8 @@ in {
   systemd-bridge = pkgs.callPackage ./systemd-bridge.nix {
     inherit hjemModule hjemCompatModule hjemTest hmSrc;
   };
+
+  firefox = pkgs.callPackage ./firefox.nix {
+    inherit hjemModule hjemCompatModule hjemTest hmSrc wrapHmModule;
+  };
 }

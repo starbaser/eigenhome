@@ -2,13 +2,18 @@
 # HM modules expect lib.hm.* to be available (e.g., lib.hm.shell.mkBashIntegrationOption).
 # Since the module system hardwires lib and _module.args cannot override it,
 # we intercept the module function call to inject the extended lib.
-{hmExtLib}: hmModulePath:
-# Return a module function that wraps the original
-args: let
-  # Import the HM module
-  hmModule = import hmModulePath;
-
-  # Call it with the extended lib
-  result = hmModule (args // {lib = hmExtLib;});
+#
+# Multi-file HM modules (e.g., firefox) use `imports` to bring in sub-modules.
+# Those sub-modules would normally receive the original lib (without lib.hm)
+# from the module system. We recursively wrap imports so every layer gets
+# the extended lib.
+{hmExtLib}: let
+  wrapImport = mod:
+    if builtins.isFunction mod then
+      args: wrapImport (mod (args // {lib = hmExtLib;}))
+    else if builtins.isAttrs mod && mod ? imports then
+      mod // {imports = map wrapImport mod.imports;}
+    else
+      mod;
 in
-  result
+  hmModulePath: wrapImport (import hmModulePath)
