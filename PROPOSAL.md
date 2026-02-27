@@ -18,7 +18,7 @@ rum ports, or stay on Home Manager. None of these are satisfying.
 interface into hjem primitives. Users import unmodified HM program modules
 and configure them normally — hjem-compat handles the rest.
 
-```
+```text
   ┌──────────────────────────────────────────────────────────────────┐
   │                      User Configuration                          │
   │                                                                  │
@@ -42,59 +42,44 @@ and configure them normally — hjem-compat handles the rest.
 
 ## Architecture
 
-```
-  ┌──────────────────┐
-  │  HM Module       │  Unmodified programs/starship.nix, programs/git.nix, ...
-  │  (unchanged)     │
-  └────────┬─────────┘
-           │ wrapHmModule injects lib.hm
-           ▼
-  ┌──────────────────────────────────────────────────────────────┐
-  │                     hjem-compat shim                         │
-  │                                                              │
-  │  ┌───────────────┐  ┌────────────────┐  ┌────────────────┐   │
-  │  │  lib.hm       │  │ home.* stubs   │  │  xdg.* stubs   │   │
-  │  │  injection    │  │ (file,packages │  │  (configFile,  │   │
-  │  │  via hmExtLib │  │  sessionVars)  │  │   dataFile)    │   │
-  │  └──────┬────────┘  └──────┬─────────┘  └───────┬────────┘   │
-  │         │                  │                    │            │
-  │         ▼                  ▼                    ▼            │
-  │  ┌──────────────────────────────────────────────────────┐    │
-  │  │               translation.nix                        │    │
-  │  │                                                      │    │
-  │  │  home.file."path"      ──▶  files."path"             │    │
-  │  │  xdg.configFile."p"   ──▶  xdg.config.files."p"      │    │
-  │  │  xdg.dataFile."p"     ──▶  xdg.data.files."p"        │    │
-  │  │  home.packages         ──▶  packages                 │    │
-  │  │  home.sessionVariables ──▶  environment.sessionVars  │    │
-  │  └──────────────────────────────────────────────────────┘    │
-  │                        │                                     │
-  │  ┌──────────────────────────────────────────────────────┐    │
-  │  │               shell-bridge.nix                       │    │
-  │  │                                                      │    │
-  │  │    HM shell writes                                   │    │
-  │  │         │                                            │    │
-  │  │    ┌────┴────┐                                       │    │
-  │  │    ▼         ▼                                       │    │
-  │  │  ┌───────┐ ┌──────────┐                              │    │
-  │  │  │  Rum  │ │Standalone│                              │    │
-  │  │  │ bridge│ │ fallback │                              │    │
-  │  │  └───┬───┘ └────┬─────┘                              │    │
-  │  │      ▼          ▼                                    │    │
-  │  │  rum.programs  xdg.config.files                      │    │
-  │  │  .zsh/fish/    "zsh/hm-compat.zsh"                   │    │
-  │  │  nushell       "bash/hm-compat.sh"                   │    │
-  │  │  (via mkAfter) "fish/conf.d/hm-compat.fish"          │    │
-  │  └──────────────────────────────────────────────────────┘    │
-  └──────────────────────────────────────────────────────────────┘
-                         │
-                         ▼
-            ┌────────────────────────┐
-            │     hjem manifest      │
-            │   (smfh / tmpfiles)    │
-            │                        │
-            │   symlinks in $HOME    │
-            └────────────────────────┘
+```text
+                  ┌────────────────────────────────────────────────────────┐
+                  │                  NixOS Configuration                   │
+                  │                                                        │
+                  │     imports = [ hjem-compat.nixosModules.default ];    │
+                  │     hjem.extraModules = [ ...hjemModules.default ];    │
+                  └───────────────────────────┬────────────────────────────┘
+                                              │
+                        ┌─────────────────────┴──────────────────────┐
+                        ▼                                            ▼
+           ┌───────────────────────────────────┐           ┌───────────────────┐
+           │            hjemModule             │           │    nixosModule    │
+           │         (hjem submodule)          │           │   (NixOS level)   │
+           │                                   │ script    │                   │
+           │  ┌───────────────┐ ┌──────────────┤  path     │ ┌───────────────┐ │
+           │  │systemd-bridge │ │ activation-  ├──────────▶│ │hjem-compat-   │ │
+           │  │               │ │ runner.nix   │           │ │activate@.svc  │ │
+           │  │ systemd.user  │ └──────────────┘           │ └───────────────┘ │
+           │  │ INI sections  │                │           │                   │
+           │  │       ▼       │ ┌──────────────┐           │   daemon-reload   │
+           │  │ systemd.units │ │ shell-bridge │           │   triggers new    │
+           │  └───────────────┘ │              │           │   unit pickup     │
+           │                    │ HM shell ──┐ │           │                   │
+           │  ┌───────────────┐ │   rum? ────┤ │           └───────────────────┘
+           │  │translation.nix│ │   no rum ──┘ │
+           │  │               │ └──────────────┘
+           │  │ home.file     │                │
+           │  │   ▼ files     │                │
+           │  │ xdg.*File     │                │
+           │  └───────────────┘                │
+           └──────────────────┬────────────────┘
+                              │
+                              ▼
+           ┌───────────────────────────────────┐
+           │           hjem manifest           │
+           │         (smfh / tmpfiles)         │
+           │         symlinks in $HOME         │
+           └───────────────────────────────────┘
 ```
 
 ## Key Design Decisions
@@ -108,7 +93,7 @@ overridden via `_module.args.lib`.
 **Solution**: `wrapHmModule` intercepts the module function and injects a
 composite `hmExtLib` (`pkgs.lib` extended with `lib.hm`) directly:
 
-```
+```text
   ┌────────────────────┐     ┌───────────────────────────┐
   │   HM Module        │     │   wrapHmModule            │
   │                    │     │                           │
@@ -122,7 +107,7 @@ composite `hmExtLib` (`pkgs.lib` extended with `lib.hm`) directly:
 
 ### 2. Dual-Mode Shell Bridge
 
-```
+```text
   ┌──────────────────────────────────────────┐
   │   HM Module writes:                      │
   │   programs.zsh.initContent = "..."       │
@@ -151,7 +136,7 @@ Fish's `conf.d/` auto-sourcing means zero user action for fish.
 
 ### 3. Translation Safety
 
-```
+```text
   HM file entry                    Hjem file entry
   ┌───────────────────┐             ┌───────────────────┐
   │ target: relative  │────────────▶│ key: target       │
@@ -167,9 +152,80 @@ Fish's `conf.d/` auto-sourcing means zero user action for fish.
 - `executable` coerced from `nullOr bool` to `bool`
 - `text` is never forwarded (HM already resolved it into `source`)
 
+### 4. Activation DAG Runner
+
+Some HM modules require imperative actions beyond file linking. Firefox
+copies profile directory structures and writes `profiles.ini`. Dconf
+runs `dconf load` to push settings into the GNOME database. GPG imports
+keys and sets directory permissions. Font management runs `fc-cache`
+after linking font files.
+
+These modules express this work as `home.activation` entries — a DAG
+(directed acyclic graph) of named shell script fragments with explicit
+ordering dependencies (`entryAfter`, `entryBefore`). Hjem has no
+equivalent concept: it is purely a file linker with a systemd oneshot
+service. The activation DAG runner bridges this gap.
+
+**How it works**: At evaluation time, the runner topo-sorts all
+`home.activation` entries using HM's own `lib.hm.dag.topoSort`, then
+filters out HM's 8 built-in lifecycle phases that conflict with hjem's
+linker model (hjem handles file linking and package installation
+natively — these phases would duplicate or break that work). The
+remaining entries are compiled into an executable bash script with
+minimal HM-compatible shell helpers (`run`, `verboseEcho`, `_iNote`).
+
+The script is written to `~/.local/share/hjem-compat/activate` via
+hjem's file linker, and a NixOS-level systemd service executes it after
+file linking completes:
+
+```text
+  hjem.target
+    └─▶ hjem-activate@alice.service        (smfh links files)
+         └─▶ hjem-compat-activate@alice.service
+               ├─ systemctl --user daemon-reload  (picks up new units)
+               └─ ~/.local/share/hjem-compat/activate
+                    ├─ createTestDir    ◀── user/program entries
+                    ├─ setupGpgHome         (topo-sorted, filtered)
+                    └─ rebuildFontCache
+```
+
+```text
+  Filtered HM built-in phases (handled natively by hjem):
+    writeBoundary, installPackages, checkLinkTargets,
+    linkGeneration, checkFilesChanged, onFilesChange,
+    createXdgUserDirectories, reloadSystemd
+```
+
+**Without this runner**, Tier 3 modules would silently produce broken
+results — config files linked correctly, but imperative setup steps
+skipped. Firefox would lack a usable profile, dconf settings wouldn't
+load, font caches would be stale.
+
+### 5. Systemd Bridge
+
+HM modules define systemd units using INI-section format:
+```nix
+systemd.user.services.foo = {
+  Unit.Description = "...";
+  Service.ExecStart = "...";
+  Install.WantedBy = ["default.target"];
+};
+```
+
+Hjem's native `systemd.services` uses NixOS types (different schema).
+Rather than converting between these incompatible schemas, the bridge
+generates INI text directly and injects into hjem's internal
+`systemd.units` option — the same data store that hjem's own unit
+generation feeds into.
+
+```text
+  HM INI sections ──▶ toSystemdIni ──▶ systemd.units.text
+  Install.WantedBy ──▶ unit.wantedBy (symlink generation)
+```
+
 ## Module Compatibility Tiers
 
-```
+```text
   Tier 1: Config-only ─────────────────── ✅ Fully supported
   │ starship, alacritty, kitty, foot, helix, yazi, bottom,
   │ tealdeer, fastfetch, lsd, ghostty, neovide, broot
@@ -178,24 +234,24 @@ Fish's `conf.d/` auto-sourcing means zero user action for fish.
   │ git, direnv, zoxide, fzf, nix-your-shell, starship
   │ (shell hooks route through bridge)
   │
-  Tier 3: Config + Activation ─────────── ⚠  Partial (stubs)
+  Tier 3: Config + Activation ─────────── ✅ Fully supported
   │ firefox, thunderbird, dconf, font management
-  │ (activation DAG collected but not executed)
+  │ (activation DAG sorted, filtered, executed post-linking)
   │
-  Tier 4: Config + Services ───────────── ⚠  Partial (stubs)
+  Tier 4: Config + Services ───────────── ✅ Fully supported
   │ syncthing, mako, dunst, gpg-agent, ssh-agent
-  │ (systemd options stubbed, no functional bridge)
+  │ (systemd units bridged via INI → hjem systemd.units)
 ```
 
-**Tier 1+2 covers the vast majority of user demand.** These are the
-modules people use daily and ask about in hjem discussions.
+**All four tiers are covered.** Tier 1+2 covers the vast majority of
+daily-use modules. Tier 3+4 enables the full HM ecosystem.
 
 ## What This Is Not
 
 - **Not a fork of Home Manager.** HM modules are imported unmodified.
 - **Not a replacement for hjem-rum.** Native rum modules are preferred;
   compat fills the gaps for the long tail.
-- **Not heavyweight.** ~11 module files. Only evaluates what you import.
+- **Not heavyweight.** ~13 module files. Only evaluates what you import.
   Zero overhead if no HM modules are used.
 - **Not coupled to hjem internals.** Uses `hjem.extraModules`, the public
   extension point. No patches, no forks.
@@ -204,7 +260,7 @@ modules people use daily and ask about in hjem discussions.
 
 Native rum modules and HM compat modules coexist cleanly:
 
-```
+```nix
   hjem.users.alice = {
     imports = [ hjemRumModule hjemCompatModule ... ];
 
@@ -221,7 +277,7 @@ Native rum modules and HM compat modules coexist cleanly:
 If both rum and HM try to manage the same program, `warnings.nix` emits
 a clear diagnostic:
 
-```
+```text
   warning: programs.starship is configured via both hjem-rum and
   hjem-compat. The rum module takes precedence. Remove one to
   avoid conflicts.
@@ -229,20 +285,25 @@ a clear diagnostic:
 
 ## File Structure
 
-```
+```text
   hjem-compat/
   ├── flake.nix                    Inputs: nixpkgs, hjem, hjem-rum, home-manager
+  │                                Outputs: hjemModules, nixosModules, checks
+  ├── nixos/
+  │   └── activation.nix           NixOS-level activation service
   ├── modules/
   │   ├── default.nix              Entry point (imports all below)
   │   ├── lib-hm.nix              lib.hm injection + wrapHmModule
   │   ├── wrap-hm-module.nix      HM module wrapper function
-  │   ├── home-options.nix        home.file, packages, sessionVariables, ...
+  │   ├── home-options.nix        home.file, packages, sessionVariables, activation
   │   ├── xdg-options.nix         xdg.configFile, dataFile, cacheFile, ...
   │   ├── config-lib.nix          config.lib.file.mkOutOfStoreSymlink, ...
   │   ├── translation.nix         HM options to hjem primitives mapping
   │   ├── shell-stubs.nix         programs.bash/zsh/fish/nushell option sinks
   │   ├── shell-bridge.nix        Dual-mode rum/standalone routing
-  │   ├── cross-module-stubs.nix  meta, accounts.email, systemd.user stubs
+  │   ├── activation-runner.nix   DAG → bash script → hjem files
+  │   ├── systemd-bridge.nix      systemd.user INI → hjem systemd.units
+  │   ├── cross-module-stubs.nix  meta, accounts.email, launchd stubs
   │   └── warnings.nix            Unsupported feature + conflict detection
   └── tests/
       ├── default.nix              Test harness
@@ -250,18 +311,12 @@ a clear diagnostic:
       ├── starship.nix             Config + shell init + session variable
       ├── starship-rum.nix         Rum bridge routing verification
       ├── git.nix                  gitIni config + XDG files
-      └── direnv.nix               Config + shell hooks
+      ├── direnv.nix               Config + shell hooks
+      ├── activation.nix           Activation DAG runner
+      └── systemd-bridge.nix       Systemd unit bridge
 ```
 
-## Roadmap
+## Not Yet Implemented
 
-**Phase 1** (current): Core shim + shell bridge. Tier 1+2 modules.
-**Phase 2**: Activation DAG runner for Tier 3 (firefox, dconf).
-**Phase 3**: systemd.user service bridge for Tier 4 (syncthing, mako).
-
-## Questions for Maintainers
-
-1. Does the shim approach align with hjem's philosophy?
-2. Should `wrapHmModule` live in hjem's lib eventually?
-3. Interest in integrating the shell bridge detection into rum directly?
-4. Preferred home for this project — feel-co org, separate, or community?
+- `accounts.email` bridge — HM's email account options are not yet translated.
+- Extended activation hooks — custom pre/post-activation hook points.

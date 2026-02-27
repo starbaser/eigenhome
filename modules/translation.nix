@@ -6,9 +6,9 @@
   hmExtLib,
   lib,
   ...
-}:
-let
-  inherit (lib)
+}: let
+  inherit
+    (lib)
     filterAttrs
     listToAttrs
     mapAttrsToList
@@ -19,7 +19,10 @@ let
   translateFileValue = entry: {
     inherit (entry) enable;
     source = entry.source;
-    executable = if entry.executable == true then true else false;
+    executable =
+      if entry.executable == true
+      then true
+      else false;
     clobber = entry.force;
   };
 
@@ -49,9 +52,8 @@ let
       ) (filterAttrs (_: e: e.enable) fileSet)
     );
 
-  hasFiles = set: (filterAttrs (_: e: e.enable) set) != { };
-in
-{
+  hasFiles = set: (filterAttrs (_: e: e.enable) set) != {};
+in {
   config = {
     home = {
       username = config.user;
@@ -85,14 +87,13 @@ in
     packages = config.home.packages;
 
     # --- Session variable translation ---
-    environment.sessionVariables =
-      let
-        vars = config.home.sessionVariables;
-        pathEntries = config.home.sessionPath;
-      in
-      mkIf (vars != { } || pathEntries != [ ]) (
+    environment.sessionVariables = let
+      vars = config.home.sessionVariables;
+      pathEntries = config.home.sessionPath;
+    in
+      mkIf (vars != {} || pathEntries != []) (
         vars
-        // (mkIf (pathEntries != [ ]) {
+        // (mkIf (pathEntries != []) {
           PATH = hmExtLib.hm.shell.prependToVar ":" "PATH" pathEntries;
         })
       );

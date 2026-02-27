@@ -7,9 +7,9 @@
   lib,
   options,
   ...
-}:
-let
-  inherit (lib)
+}: let
+  inherit
+    (lib)
     concatStringsSep
     mapAttrsToList
     mkAfter
@@ -20,34 +20,33 @@ let
 
   # Detect whether rum modules are loaded by checking if the option path exists.
   hasRum = options ? rum;
-  rumEnabled = path: hasRum && lib.attrByPath (path ++ [ "enable" ]) false config;
+  rumEnabled = path: hasRum && lib.attrByPath (path ++ ["enable"]) false config;
 
   allAliases = shell:
     config.home.shellAliases
-    // (lib.attrByPath [ "programs" shell "shellAliases" ] { } config);
+    // (lib.attrByPath ["programs" shell "shellAliases"] {} config);
 
   aliasLines = shell:
     concatStringsSep "\n" (
       mapAttrsToList (n: v: "alias ${n}=${lib.escapeShellArg v}") (allAliases shell)
     );
 
-  fishAliasLines =
-    concatStringsSep "\n" (
-      mapAttrsToList (n: v: "alias -- ${lib.escapeShellArg n} ${lib.escapeShellArg v}") (allAliases "fish")
-    );
+  fishAliasLines = concatStringsSep "\n" (
+    mapAttrsToList (n: v: "alias -- ${lib.escapeShellArg n} ${lib.escapeShellArg v}") (allAliases "fish")
+  );
 
-  fishAbbrLines =
-    concatStringsSep "\n" (
-      mapAttrsToList (n: v: "abbr --add -- ${lib.escapeShellArg n} ${lib.escapeShellArg v}") config.programs.fish.shellAbbrs
-    );
+  fishAbbrLines = concatStringsSep "\n" (
+    mapAttrsToList (n: v: "abbr --add -- ${lib.escapeShellArg n} ${lib.escapeShellArg v}") config.programs.fish.shellAbbrs
+  );
 
   zsh = {
     hasContent =
-      config.programs.zsh.initContent != ""
+      config.programs.zsh.initContent
+      != ""
       || config.programs.zsh.initExtra != ""
-      || (allAliases "zsh") != { };
+      || (allAliases "zsh") != {};
     content = concatStringsSep "\n" [
-      (optionalString ((allAliases "zsh") != { }) (aliasLines "zsh"))
+      (optionalString ((allAliases "zsh") != {}) (aliasLines "zsh"))
       config.programs.zsh.initContent
       config.programs.zsh.initExtra
     ];
@@ -70,11 +69,12 @@ let
 
   bash = {
     hasContent =
-      config.programs.bash.initExtra != ""
+      config.programs.bash.initExtra
+      != ""
       || config.programs.bash.bashrcExtra != ""
-      || (allAliases "bash") != { };
+      || (allAliases "bash") != {};
     content = concatStringsSep "\n" [
-      (optionalString ((allAliases "bash") != { }) (aliasLines "bash"))
+      (optionalString ((allAliases "bash") != {}) (aliasLines "bash"))
       config.programs.bash.initExtra
       config.programs.bash.bashrcExtra
     ];
@@ -87,13 +87,14 @@ let
 
   fish = {
     hasInteractive =
-      config.programs.fish.interactiveShellInit != ""
+      config.programs.fish.interactiveShellInit
+      != ""
       || config.programs.fish.shellInitLast != ""
-      || (allAliases "fish") != { }
-      || config.programs.fish.shellAbbrs != { };
+      || (allAliases "fish") != {}
+      || config.programs.fish.shellAbbrs != {};
     interactiveContent = concatStringsSep "\n" [
-      (optionalString ((allAliases "fish") != { }) fishAliasLines)
-      (optionalString (config.programs.fish.shellAbbrs != { }) fishAbbrLines)
+      (optionalString ((allAliases "fish") != {}) fishAliasLines)
+      (optionalString (config.programs.fish.shellAbbrs != {}) fishAbbrLines)
       config.programs.fish.interactiveShellInit
       config.programs.fish.shellInitLast
     ];
@@ -110,11 +111,10 @@ let
     envContent = config.programs.nushell.extraEnv;
   };
 
-  rumZsh = rumEnabled [ "rum" "programs" "zsh" ];
-  rumFish = rumEnabled [ "rum" "programs" "fish" ];
-  rumNushell = rumEnabled [ "rum" "programs" "nushell" ];
-in
-{
+  rumZsh = rumEnabled ["rum" "programs" "zsh"];
+  rumFish = rumEnabled ["rum" "programs" "fish"];
+  rumNushell = rumEnabled ["rum" "programs" "nushell"];
+in {
   config =
     {
       xdg.config.files = lib.mkMerge [
@@ -166,8 +166,8 @@ in
       ];
 
       home.sessionVariables = lib.mkMerge [
-        (mkIf (config.programs.bash.sessionVariables != { }) config.programs.bash.sessionVariables)
-        (mkIf (config.programs.zsh.sessionVariables != { }) config.programs.zsh.sessionVariables)
+        (mkIf (config.programs.bash.sessionVariables != {}) config.programs.bash.sessionVariables)
+        (mkIf (config.programs.zsh.sessionVariables != {}) config.programs.zsh.sessionVariables)
       ];
     }
     # Rum bridge routes: only included when rum modules are loaded.

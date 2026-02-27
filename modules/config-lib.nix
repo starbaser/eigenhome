@@ -3,11 +3,9 @@
   hmExtLib,
   lib,
   ...
-}:
-let
+}: let
   inherit (lib) mkOption types;
-in
-{
+in {
   options.lib = {
     file = {
       mkOutOfStoreSymlink = mkOption {

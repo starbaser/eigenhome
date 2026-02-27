@@ -1,19 +1,19 @@
 # Shell option stubs — accepts writes from HM program modules.
 # HM modules write to programs.zsh.initContent, programs.bash.initExtra, etc.
 # These options collect the content; shell-bridge.nix routes it to rum or files.
-{ lib, ... }:
-let
+{lib, ...}: let
   inherit (lib) mkOption types;
 
-  linesOpt = description: mkOption {
-    type = types.lines;
-    default = "";
-    inherit description;
-  };
+  linesOpt = description:
+    mkOption {
+      type = types.lines;
+      default = "";
+      inherit description;
+    };
 
   aliasesOpt = mkOption {
     type = types.attrsOf types.str;
-    default = { };
+    default = {};
     description = "Shell aliases.";
   };
 
@@ -23,11 +23,10 @@ let
       types.path
       types.int
     ]);
-    default = { };
+    default = {};
     description = "Per-shell session variables.";
   };
-in
-{
+in {
   options.programs = {
     bash = {
       enable = lib.mkEnableOption "bash configuration";
@@ -58,7 +57,7 @@ in
       shellAliases = aliasesOpt;
       shellAbbrs = mkOption {
         type = types.attrsOf types.str;
-        default = { };
+        default = {};
         description = "Fish abbreviations.";
       };
     };

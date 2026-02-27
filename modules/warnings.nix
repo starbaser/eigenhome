@@ -4,13 +4,14 @@
   lib,
   options,
   ...
-}:
-let
-  inherit (lib)
+}: let
+  inherit
+    (lib)
     attrNames
     concatMap
     filter
     filterAttrs
+    isBool
     optional
     ;
 
@@ -25,27 +26,41 @@ let
 
   # Detect files using unsupported HM features.
   recursiveFiles = concatMap (
-    setName:
-    let
+    setName: let
       fileSet = allFileSets.${setName};
     in
-    map (name: "${setName}.\"${name}\".recursive") (
-      attrNames (filterAttrs (_: f: f.recursive or false) fileSet)
-    )
+      map (name: "${setName}.\"${name}\".recursive") (
+        attrNames (filterAttrs (_: f: f.recursive or false) fileSet)
+      )
   ) (attrNames allFileSets);
 
   onChangeFiles = concatMap (
-    setName:
-    let
+    setName: let
       fileSet = allFileSets.${setName};
     in
-    map (name: "${setName}.\"${name}\".onChange") (
-      attrNames (filterAttrs (_: f: (f.onChange or "") != "") fileSet)
-    )
+      map (name: "${setName}.\"${name}\".onChange") (
+        attrNames (filterAttrs (_: f: (f.onChange or "") != "") fileSet)
+      )
   ) (attrNames allFileSets);
 
-  # Detect activation scripts.
-  hasActivation = config.home.activation != { };
+  # Detect activation scripts without NixOS module.
+  hasActivation = config.home.activation != {};
+  hasNixosModule = options ? osConfig;
+
+  # Detect systemd.user.startServices override.
+  startServicesChanged = let
+    v = config.systemd.user.startServices;
+  in
+    if isBool v
+    then !v
+    else v == "suggest";
+
+  # Detect overlap between systemd.user.sessionVariables and home.sessionVariables.
+  systemdSessionVars = config.systemd.user.sessionVariables;
+  homeSessionVars = config.home.sessionVariables;
+  overlappingVars = filter (
+    name: homeSessionVars ? ${name}
+  ) (attrNames systemdSessionVars);
 
   # Detect dual rum + HM program conflicts.
   dualPrograms = [
@@ -68,29 +83,41 @@ let
     "tealdeer"
   ];
 
-  rumProgramEnabled = name: lib.attrByPath [ "rum" "programs" name "enable" ] false config;
-  hmProgramEnabled = name: lib.attrByPath [ "programs" name "enable" ] false config;
+  rumProgramEnabled = name: lib.attrByPath ["rum" "programs" name "enable"] false config;
+  hmProgramEnabled = name: lib.attrByPath ["programs" name "enable"] false config;
 
   conflicts = filter (name: rumProgramEnabled name && hmProgramEnabled name) dualPrograms;
-in
-{
+in {
   config.warnings =
-    (optional (recursiveFiles != [ ]) ''
+    (optional (recursiveFiles != []) ''
       hjem-compat: The following files use 'recursive = true', which is not supported by hjem.
       Directories will be symlinked as a whole instead of per-leaf.
       Affected: ${lib.concatStringsSep ", " recursiveFiles}
     '')
-    ++ (optional (onChangeFiles != [ ]) ''
+    ++ (optional (onChangeFiles != []) ''
       hjem-compat: The following files use 'onChange', which is not supported by hjem.
       Post-change hooks will not be executed.
       Affected: ${lib.concatStringsSep ", " onChangeFiles}
     '')
-    ++ (optional hasActivation ''
-      hjem-compat: home.activation scripts are set but cannot be executed by hjem's file linker.
-      Activation entries: ${lib.concatStringsSep ", " (attrNames config.home.activation)}
+    ++ (optional (hasActivation && !hasNixosModule) ''
+      hjem-compat: home.activation scripts are defined but the NixOS activation module
+      is not imported. Add hjem-compat's nixosModules.default to your NixOS configuration
+      to enable activation script execution after file linking.
+      Entries: ${lib.concatStringsSep ", " (attrNames config.home.activation)}
+    '')
+    ++ (optional startServicesChanged ''
+      hjem-compat: systemd.user.startServices is set but service switching is handled
+      by the NixOS hjem-compat-activate@ service (daemon-reload only).
+      Live service restart/stop is not supported.
+    '')
+    ++ (optional (overlappingVars != []) ''
+      hjem-compat: systemd.user.sessionVariables and home.sessionVariables define
+      overlapping keys: ${lib.concatStringsSep ", " overlappingVars}.
+      Both will be applied; home.sessionVariables takes precedence at shell level.
     '')
     ++ (map (name: ''
-      hjem-compat: Both rum.programs.${name} and programs.${name} (HM) are enabled.
-      This may cause duplicate config files. Consider disabling one.
-    '') conflicts);
+        hjem-compat: Both rum.programs.${name} and programs.${name} (HM) are enabled.
+        This may cause duplicate config files. Consider disabling one.
+      '')
+      conflicts);
 }

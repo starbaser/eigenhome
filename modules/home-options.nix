@@ -7,9 +7,9 @@
   lib,
   pkgs,
   ...
-}:
-let
-  inherit (lib)
+}: let
+  inherit
+    (lib)
     mkOption
     types
     ;
@@ -20,18 +20,17 @@ let
     inherit pkgs;
     homeDirectory = config.home.homeDirectory;
   };
-in
-{
+in {
   options.home = {
     file = mkOption {
       type = hmFileType.fileType "home.file" "home directory" config.home.homeDirectory;
-      default = { };
+      default = {};
       description = "Attribute set of files to link into the user home directory.";
     };
 
     packages = mkOption {
       type = types.listOf types.package;
-      default = [ ];
+      default = [];
       description = "Packages to install for this user.";
     };
 
@@ -41,13 +40,13 @@ in
         types.path
         types.int
       ]);
-      default = { };
+      default = {};
       description = "Environment variables to set on session start.";
     };
 
     sessionPath = mkOption {
       type = types.listOf types.str;
-      default = [ ];
+      default = [];
       description = "Extra directories to prepend to PATH.";
     };
 
@@ -75,11 +74,13 @@ in
       description = "State version for HM module backwards-compatibility.";
     };
 
-    # Activation scripts — collected but not executed by hjem.
+    # Activation scripts — topo-sorted and written to an executable script
+    # by activation-runner.nix. Executed by the NixOS hjem-compat-activate@
+    # service after file linking. HM built-in phases are filtered out.
     activation = mkOption {
       type = hmExtLib.hm.types.dagOf types.str;
-      default = { };
-      description = "DAG of activation scripts (collected, not executed).";
+      default = {};
+      description = "DAG of activation scripts, executed after hjem links files.";
     };
 
     # Global shell integration toggles.
@@ -113,7 +114,7 @@ in
 
     shellAliases = mkOption {
       type = types.attrsOf types.str;
-      default = { };
+      default = {};
       description = "Shell aliases applied to all enabled shells.";
     };
   };

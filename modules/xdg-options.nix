@@ -7,8 +7,7 @@
   lib,
   pkgs,
   ...
-}:
-let
+}: let
   inherit (lib) mkOption types;
 
   hmFileType = import "${hmSrc}/modules/lib/file-type.nix" {
@@ -16,8 +15,7 @@ let
     inherit pkgs;
     homeDirectory = config.home.homeDirectory;
   };
-in
-{
+in {
   options.xdg = {
     configHome = mkOption {
       type = types.str;
@@ -45,25 +43,25 @@ in
 
     configFile = mkOption {
       type = hmFileType.fileType "xdg.configFile" "XDG config directory" config.xdg.configHome;
-      default = { };
+      default = {};
       description = "Files to link into the XDG config directory.";
     };
 
     dataFile = mkOption {
       type = hmFileType.fileType "xdg.dataFile" "XDG data directory" config.xdg.dataHome;
-      default = { };
+      default = {};
       description = "Files to link into the XDG data directory.";
     };
 
     cacheFile = mkOption {
       type = hmFileType.fileType "xdg.cacheFile" "XDG cache directory" config.xdg.cacheHome;
-      default = { };
+      default = {};
       description = "Files to link into the XDG cache directory.";
     };
 
     stateFile = mkOption {
       type = hmFileType.fileType "xdg.stateFile" "XDG state directory" config.xdg.stateHome;
-      default = { };
+      default = {};
       description = "Files to link into the XDG state directory.";
     };
   };

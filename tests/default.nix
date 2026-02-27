@@ -4,28 +4,26 @@
   hjem,
   hjem-rum,
   home-manager,
-}:
-let
+}: let
   hjemModule = hjem.nixosModules.default;
   hjemRumModule = hjem-rum.hjemModules.default;
-  hjemCompatModule = import "${self}/modules" { inherit home-manager; };
+  hjemCompatModule = import "${self}/modules" {inherit home-manager;};
+  hjemCompatNixosModule = "${self}/nixos/activation.nix";
   hmSrc = "${home-manager}";
 
   hmExtLib = pkgs.lib.extend (
     self: super: {
-      hm = import "${home-manager}/modules/lib" { lib = self; };
+      hm = import "${home-manager}/modules/lib" {lib = self;};
     }
   );
-  wrapHmModule = import "${self}/modules/wrap-hm-module.nix" { inherit hmExtLib; };
+  wrapHmModule = import "${self}/modules/wrap-hm-module.nix" {inherit hmExtLib;};
 
-  hjemTest =
-    test:
+  hjemTest = test:
     (pkgs.testers.runNixOSTest {
       defaults.documentation.enable = pkgs.lib.mkDefault false;
-      imports = [ test ];
+      imports = [test];
     }).config.result;
-in
-{
+in {
   basic-files = pkgs.callPackage ./basic-files.nix {
     inherit hjemModule hjemCompatModule hjemTest hmSrc;
   };
@@ -44,5 +42,13 @@ in
 
   direnv = pkgs.callPackage ./direnv.nix {
     inherit hjemModule hjemCompatModule hjemTest hmSrc wrapHmModule;
+  };
+
+  activation = pkgs.callPackage ./activation.nix {
+    inherit hjemModule hjemCompatModule hjemCompatNixosModule hjemTest hmSrc;
+  };
+
+  systemd-bridge = pkgs.callPackage ./systemd-bridge.nix {
+    inherit hjemModule hjemCompatModule hjemTest hmSrc;
   };
 }
