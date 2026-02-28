@@ -14,16 +14,13 @@
 #   wrapHmModule inputs.stylix.homeModules.stylix       # flake output (function)
 {hmExtLib}: let
   wrapImport = mod:
-    if builtins.isFunction mod then
+    if builtins.isPath mod || builtins.isString mod then
+      wrapImport (import mod)
+    else if builtins.isFunction mod then
       args: wrapImport (mod (args // {lib = hmExtLib;}))
     else if builtins.isAttrs mod && mod ? imports then
       mod // {imports = map wrapImport mod.imports;}
     else
       mod;
 in
-  mod:
-    wrapImport (
-      if builtins.isPath mod || builtins.isString mod
-      then import mod
-      else mod
-    )
+  wrapImport
