@@ -53,6 +53,16 @@ in {
       description = "Cursor theme configuration (translated to hjem cursor files).";
     };
 
+    # i18n — input method framework (fcitx5, etc.). Stylix's fcitx5 target
+    # writes here even when disabled (mkIf false still requires option path).
+    i18n = mkOption {
+      type = types.submodule {
+        freeformType = types.attrsOf types.anything;
+      };
+      default = {};
+      description = "Input method config (accepted for compat).";
+    };
+
     # xsession — X11 session config (accept and discard on Wayland).
     xsession = mkOption {
       type = types.submodule {
