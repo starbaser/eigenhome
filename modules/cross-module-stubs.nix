@@ -35,6 +35,66 @@ in {
     programs.patdiff.enable = lib.mkEnableOption "patdiff";
     programs.riff.enable = lib.mkEnableOption "riff";
 
+    # dconf — GTK/GNOME theming modules (Stylix, etc.) set dconf settings.
+    # Accepted here; actual application is handled by dconf-bridge.nix.
+    dconf.settings = mkOption {
+      type = types.attrsOf (types.attrsOf types.anything);
+      default = {};
+      description = "dconf settings for inter-module communication and GTK theming.";
+    };
+    dconf.enable = lib.mkEnableOption "dconf settings management" // { default = true; };
+
+    # HM's home.pointerCursor — cursor theme configuration.
+    home.pointerCursor = mkOption {
+      type = types.nullOr (types.submodule {
+        freeformType = types.attrsOf types.anything;
+      });
+      default = null;
+      description = "Cursor theme configuration (translated to hjem cursor files).";
+    };
+
+    # xsession — X11 session config (accept and discard on Wayland).
+    xsession = mkOption {
+      type = types.submodule {
+        freeformType = types.attrsOf types.anything;
+      };
+      default = {};
+      description = "X11 session config (accepted, not used on Wayland).";
+    };
+
+    # Fontconfig defaults — consumed by fontconfig-bridge.nix.
+    fonts.fontconfig = mkOption {
+      type = types.submodule {
+        freeformType = types.attrsOf types.anything;
+      };
+      default = {};
+      description = "Fontconfig defaults (translated to conf.d XML by fontconfig-bridge).";
+    };
+
+    # X resources — accept and discard on Wayland.
+    xresources = mkOption {
+      type = types.submodule {
+        freeformType = types.attrsOf types.anything;
+      };
+      default = {};
+      description = "Stub for HM xresources namespace (not bridged on Wayland).";
+    };
+
+    # Wayland compositor options — safety net for disabled targets.
+    wayland = mkOption {
+      type = types.attrsOf types.anything;
+      default = {};
+      description = "Stub for HM wayland.* namespace (not bridged).";
+    };
+
+    # HM non-systemd services — safety net for disabled targets.
+    # Distinct from systemd.user.services (declared in systemd-bridge.nix).
+    services = mkOption {
+      type = types.attrsOf types.anything;
+      default = {};
+      description = "Stub for HM services.* namespace (not bridged).";
+    };
+
     # Darwin stubs — HM modules conditionally write to these on macOS.
     launchd.agents = mkOption {
       type = types.attrsOf types.anything;

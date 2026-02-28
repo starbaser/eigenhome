@@ -9,10 +9,13 @@
 }: let
   inherit
     (lib)
+    concatStringsSep
     filterAttrs
     listToAttrs
     mapAttrsToList
     mkIf
+    mkMerge
+    nameValuePair
     ;
 
   # Translate an HM file entry value to hjem file entry value.
@@ -59,6 +62,7 @@ in {
       username = config.user;
       homeDirectory = config.directory;
       profileDirectory = "/etc/profiles/per-user/${config.user}";
+      path = config.home.profileDirectory;
     };
 
     xdg = {
@@ -87,15 +91,44 @@ in {
     packages = config.home.packages;
 
     # --- Session variable translation ---
-    environment.sessionVariables = let
-      vars = config.home.sessionVariables;
-      pathEntries = config.home.sessionPath;
-    in
-      mkIf (vars != {} || pathEntries != []) (
-        vars
-        // (mkIf (pathEntries != []) {
-          PATH = hmExtLib.hm.shell.prependToVar ":" "PATH" pathEntries;
-        })
-      );
+    environment.sessionVariables = mkMerge [
+      # home.sessionVariables + home.sessionPath
+      (let
+        vars = config.home.sessionVariables;
+        pathEntries = config.home.sessionPath;
+      in
+        mkIf (vars != {} || pathEntries != []) (
+          vars
+          // (mkIf (pathEntries != []) {
+            PATH = hmExtLib.hm.shell.prependToVar ":" "PATH" pathEntries;
+          })
+        ))
+
+      # home.sessionSearchVariables → colon-joined session variables
+      (mkIf (config.home.sessionSearchVariables != {})
+        (lib.mapAttrs (_: paths: concatStringsSep ":" (map toString paths))
+          config.home.sessionSearchVariables))
+
+      # home.language → locale environment variables
+      (mkIf (config.home.language != {}) (let
+        langMap = {
+          base = "LANG";
+          ctype = "LC_CTYPE";
+          numeric = "LC_NUMERIC";
+          time = "LC_TIME";
+          collate = "LC_COLLATE";
+          monetary = "LC_MONETARY";
+          messages = "LC_MESSAGES";
+          paper = "LC_PAPER";
+          name = "LC_NAME";
+          address = "LC_ADDRESS";
+          telephone = "LC_TELEPHONE";
+          measurement = "LC_MEASUREMENT";
+        };
+      in
+        filterAttrs (_: v: v != null)
+          (lib.mapAttrs' (k: v: nameValuePair (langMap.${k} or k) v)
+            config.home.language)))
+    ];
   };
 }

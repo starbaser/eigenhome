@@ -17,6 +17,14 @@
   };
 in {
   options.xdg = {
+    enable = lib.mkEnableOption "XDG base directory specification";
+
+    mimeApps = mkOption {
+      type = types.submodule {freeformType = types.attrsOf types.anything;};
+      default = {};
+      description = "MIME type associations (accepted for compat).";
+    };
+
     configHome = mkOption {
       type = types.str;
       readOnly = true;

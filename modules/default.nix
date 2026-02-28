@@ -10,6 +10,9 @@
     ./activation-runner.nix
     ./systemd-bridge.nix
     ./cross-module-stubs.nix
+    ./cursor-bridge.nix
+    ./dconf-bridge.nix
+    ./fontconfig-bridge.nix
     ./warnings.nix
   ];
 }

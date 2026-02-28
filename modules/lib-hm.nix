@@ -5,7 +5,11 @@
 #
 # For our own modules: we pass hmLib and hmExtLib through _module.args.
 # For imported HM modules: they must be wrapped to receive the extended lib.
-{pkgs, ...}: let
+{
+  pkgs,
+  osConfig ? null,
+  ...
+}: let
   baseLib = pkgs.lib;
   hmLib = import "${home-manager}/modules/lib" {lib = baseLib;};
   extendedLib = baseLib.extend (
@@ -18,7 +22,8 @@ in {
     hmLib = hmLib;
     hmExtLib = extendedLib;
     hmSrc = "${home-manager}";
-    # Wrapper for importing HM program modules: injects lib.hm
     wrapHmModule = import ./wrap-hm-module.nix {hmExtLib = extendedLib;};
+    nixosConfig = osConfig;
+    darwinConfig = null;
   };
 }
