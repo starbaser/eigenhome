@@ -91,6 +91,15 @@ in {
       description = "Fontconfig defaults (translated to conf.d XML by fontconfig-bridge).";
     };
 
+    # xfconf — XFCE settings. Stylix's XFCE target writes here even when disabled.
+    xfconf = mkOption {
+      type = types.submodule {
+        freeformType = types.attrsOf types.anything;
+      };
+      default = {};
+      description = "XFCE xfconf settings (accepted for compat).";
+    };
+
     # X resources — accept and discard on Wayland.
     xresources = mkOption {
       type = types.submodule {
