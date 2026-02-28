@@ -25,6 +25,24 @@ in {
       description = "MIME type associations (accepted for compat).";
     };
 
+    systemDirs = mkOption {
+      type = types.submodule {freeformType = types.attrsOf types.anything;};
+      default = {};
+      description = "XDG system dirs (accepted for compat).";
+    };
+
+    portal = mkOption {
+      type = types.submodule {freeformType = types.attrsOf types.anything;};
+      default = {};
+      description = "XDG desktop portal config (accepted for compat).";
+    };
+
+    desktopEntries = mkOption {
+      type = types.attrsOf types.anything;
+      default = {};
+      description = "XDG desktop entries (accepted for compat).";
+    };
+
     configHome = mkOption {
       type = types.str;
       readOnly = true;
