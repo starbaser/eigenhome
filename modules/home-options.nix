@@ -74,6 +74,15 @@ in {
       description = "State version for HM module backwards-compatibility.";
     };
 
+    version = {
+      release = mkOption {
+        type = types.str;
+        default = "26.05";
+        readOnly = true;
+        description = "HM release version for Stylix compatibility checks.";
+      };
+    };
+
     # Activation scripts — topo-sorted and written to an executable script
     # by activation-runner.nix. Executed by the NixOS hjem-compat-activate@
     # service after file linking. HM built-in phases are filtered out.

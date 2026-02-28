@@ -53,6 +53,16 @@ in {
       description = "Cursor theme configuration (translated to hjem cursor files).";
     };
 
+    # nixpkgs — HM/Stylix modules set nixpkgs.overlays in their module context.
+    # Accepted as a sink; overlays are applied at the NixOS layer, not hjem.
+    nixpkgs = mkOption {
+      type = types.submodule {
+        freeformType = types.attrsOf types.anything;
+      };
+      default = {};
+      description = "Stub for HM nixpkgs namespace (overlays applied at NixOS level).";
+    };
+
     # i18n — input method framework (fcitx5, etc.). Stylix's fcitx5 target
     # writes here even when disabled (mkIf false still requires option path).
     i18n = mkOption {
