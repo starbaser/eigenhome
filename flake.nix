@@ -42,6 +42,8 @@
 
     nixosModules.default = ./nixos/activation.nix;
 
+    nixOnDroidModules.default = import ./nix-on-droid {inherit hjem;};
+
     checks = forAllSystems (
       system:
         import ./tests {
