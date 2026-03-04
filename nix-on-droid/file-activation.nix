@@ -32,16 +32,22 @@
 
   mkFileCommand = file:
     if file.type == "symlink" && file.source != null
-    then let
-      flag =
-        if file.clobber
-        then "-sfn"
-        else "-sn";
-    in ''
-      $VERBOSE_ECHO "hjem: linking ${file.target}"
-      $DRY_RUN_CMD mkdir -p "$(dirname '${file.target}')"
-      $DRY_RUN_CMD ln ${flag} '${file.source}' '${file.target}'
-    ''
+    then
+      if file.clobber
+      then ''
+        $VERBOSE_ECHO "hjem: linking ${file.target}"
+        $DRY_RUN_CMD mkdir -p "$(dirname '${file.target}')"
+        $DRY_RUN_CMD ln -sfn '${file.source}' '${file.target}'
+      ''
+      else ''
+        $VERBOSE_ECHO "hjem: linking ${file.target}"
+        $DRY_RUN_CMD mkdir -p "$(dirname '${file.target}')"
+        if [ -L '${file.target}' ] || [ ! -e '${file.target}' ]; then
+          $DRY_RUN_CMD ln -sfn '${file.source}' '${file.target}'
+        else
+          $VERBOSE_ECHO "hjem: skipping ${file.target} (regular file exists, clobber=false)"
+        fi
+      ''
     else if file.type == "copy" && file.source != null
     then ''
       $VERBOSE_ECHO "hjem: copying ${file.target}"
