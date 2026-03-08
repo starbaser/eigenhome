@@ -28,7 +28,7 @@
   # Minimal systemd option stubs for nix-on-droid.
   #
   # hjem's modules/nixos/systemd.nix depends on NixOS-only utils.systemdUtils,
-  # so we provide lightweight stubs that absorb writes from hjem-compat's
+  # providing lightweight stubs that absorb writes from hjem-compat's
   # systemd-bridge without generating unit files.
   systemdStub = {lib, ...}: let
     inherit (lib) mkEnableOption mkOption;

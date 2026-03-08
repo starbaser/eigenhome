@@ -15,7 +15,6 @@
     optional
     ;
 
-  # HM file sets that might use unsupported features.
   allFileSets = {
     "home.file" = config.home.file;
     "xdg.configFile" = config.xdg.configFile;
@@ -24,7 +23,6 @@
     "xdg.stateFile" = config.xdg.stateFile;
   };
 
-  # Detect files using unsupported HM features.
   recursiveFiles = concatMap (
     setName: let
       fileSet = allFileSets.${setName};
@@ -43,11 +41,9 @@
       )
   ) (attrNames allFileSets);
 
-  # Detect activation scripts without NixOS module.
   hasActivation = config.home.activation != {};
   hasNixosModule = options ? osConfig;
 
-  # Detect systemd.user.startServices override.
   startServicesChanged = let
     v = config.systemd.user.startServices;
   in
@@ -55,14 +51,12 @@
     then !v
     else v == "suggest";
 
-  # Detect overlap between systemd.user.sessionVariables and home.sessionVariables.
   systemdSessionVars = config.systemd.user.sessionVariables;
   homeSessionVars = config.home.sessionVariables;
   overlappingVars = filter (
     name: homeSessionVars ? ${name}
   ) (attrNames systemdSessionVars);
 
-  # Detect dual rum + HM program conflicts.
   dualPrograms = [
     "starship"
     "git"

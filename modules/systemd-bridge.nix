@@ -4,7 +4,7 @@
 # HM modules write INI-section style:   { Unit.Description = "..."; Service.ExecStart = "..."; }
 # Hjem's systemd.nix uses NixOS types:  { description = "..."; serviceConfig.ExecStart = "..."; }
 #
-# Rather than converting between these incompatible schemas, we generate INI
+# Rather than converting between these incompatible schemas, the bridge generates INI
 # text directly and inject into hjem's internal systemd.units option — the
 # same data store that hjem's own unit generation feeds into.
 {
@@ -63,13 +63,11 @@
     in "${key}=${value'}";
   };
 
-  # Filter null/empty values and empty sections before INI generation.
   cleanUnit = def:
     filterAttrs (_: v: v != {}) (
       mapAttrs (_: filterAttrs (_: v: v != null && v != [])) def
     );
 
-  # Convert an HM-style unit definition to a hjem systemd.units entry.
   toUnitEntry = name: type: def: let
     install = def.Install or {};
     wantedBy =
@@ -85,7 +83,6 @@
     inherit wantedBy requiredBy;
   };
 
-  # Generate systemd.units entries for a given unit type suffix.
   mkUnits = type: defs:
     mapAttrs' (n: v: nameValuePair "${n}.${type}" (toUnitEntry n type v)) defs;
 
@@ -166,7 +163,6 @@ in {
   };
 
   config = mkIf cfg.enable {
-    # Inject HM unit definitions into hjem's systemd.units as INI text.
     systemd.units = mkIf hasAnyUnits (mkMerge [
       (mkUnits "service" cfg.services)
       (mkUnits "timer" cfg.timers)
@@ -176,7 +172,6 @@ in {
       (mkUnits "slice" cfg.slices)
     ]);
 
-    # Forward systemd session variables to hjem's environment.
     environment.sessionVariables = mkIf (cfg.sessionVariables != {}) cfg.sessionVariables;
   };
 }

@@ -3,7 +3,7 @@
 # overridden from within modules (_module.args.lib is ignored when lib
 # is hardwired in the base args set).
 #
-# For our own modules: we pass hmLib and hmExtLib through _module.args.
+# Internal modules receive hmLib and hmExtLib via _module.args.
 # For imported HM modules: they must be wrapped to receive the extended lib.
 {
   pkgs,

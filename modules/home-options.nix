@@ -83,16 +83,14 @@ in {
       };
     };
 
-    # Activation scripts — topo-sorted and written to an executable script
-    # by activation-runner.nix. Executed by the NixOS hjem-compat-activate@
-    # service after file linking. HM built-in phases are filtered out.
+    # Topo-sorted and executed after file linking; HM built-in phases filtered.
     activation = mkOption {
       type = hmExtLib.hm.types.dagOf types.str;
       default = {};
       description = "DAG of activation scripts, executed after hjem links files.";
     };
 
-    # Global shell integration toggles.
+    # Global shell integration toggles
     shell = {
       enableBashIntegration = mkOption {
         type = types.bool;
@@ -127,14 +125,12 @@ in {
       description = "Shell aliases applied to all enabled shells.";
     };
 
-    # PATH-like session variables (lists joined with colons).
     sessionSearchVariables = mkOption {
       type = types.attrsOf (types.listOf types.str);
       default = {};
       description = "PATH-like session variables (lists joined with colons).";
     };
 
-    # Profile path alias for HM compat.
     path = mkOption {
       type = types.str;
       readOnly = true;

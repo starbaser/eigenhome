@@ -1,8 +1,4 @@
-# Test: systemd.user bridge generates unit files via hjem's systemd module.
-# Verifies:
-#   - HM-style INI service definitions produce correct unit files
-#   - Unit files are accessible at the expected systemd user path
-#   - INI content contains the defined sections and keys
+# Test: systemd.user bridge generates correct INI unit files via hjem.
 {
   hjemModule,
   hjemCompatModule,
@@ -60,22 +56,18 @@ in
       machine.wait_until_succeeds("test -d /run/user/$(id -u alice)")
       machine.wait_until_succeeds("sudo -u alice XDG_RUNTIME_DIR=/run/user/$(id -u alice) systemctl --user is-active systemd-tmpfiles-setup.service")
 
-      # Verify service unit file exists and has correct content
       machine.succeed("test -e ${userHome}/.config/systemd/user/test-oneshot.service")
       machine.succeed("grep 'hjem-compat test oneshot service' ${userHome}/.config/systemd/user/test-oneshot.service")
       machine.succeed("grep 'Type=oneshot' ${userHome}/.config/systemd/user/test-oneshot.service")
       machine.succeed("grep 'ExecStart' ${userHome}/.config/systemd/user/test-oneshot.service")
 
-      # Verify timer unit file exists and has correct content
       machine.succeed("test -e ${userHome}/.config/systemd/user/test-timer.timer")
       machine.succeed("grep 'hjem-compat test timer' ${userHome}/.config/systemd/user/test-timer.timer")
       machine.succeed("grep 'OnCalendar=daily' ${userHome}/.config/systemd/user/test-timer.timer")
       machine.succeed("grep 'Persistent=true' ${userHome}/.config/systemd/user/test-timer.timer")
 
-      # Verify timer wantedBy symlink was created
       machine.succeed("test -L ${userHome}/.config/systemd/user/timers.target.wants/test-timer.timer")
 
-      # Verify systemd can parse the service
       machine.succeed("sudo -u alice XDG_RUNTIME_DIR=/run/user/$(id -u alice) systemctl --user cat test-oneshot.service")
     '';
   }

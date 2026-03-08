@@ -1,7 +1,4 @@
-# Test: HM Firefox module — profile config files via wrapHmModule
-#
-# Validates that programs.firefox produces correct hjem files for:
-# profiles.ini, user.js (settings), userChrome.css, userContent.css
+# Test: HM Firefox module — profiles.ini, user.js, userChrome/userContent.css
 {
   pkgs,
   hjemModule,

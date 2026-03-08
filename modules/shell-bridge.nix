@@ -18,7 +18,6 @@
     optionalString
     ;
 
-  # Detect whether rum modules are loaded by checking if the option path exists.
   hasRum = options ? rum;
   rumEnabled = path: hasRum && lib.attrByPath (path ++ ["enable"]) false config;
 
@@ -171,8 +170,6 @@ in {
       ];
     }
     # Rum bridge routes: only included when rum modules are loaded.
-    # optionalAttrs prevents the module system from seeing rum.* option paths
-    # when they don't exist.
     // optionalAttrs hasRum {
       rum.programs.zsh.initConfig = mkIf (rumZsh && zsh.hasContent) (mkAfter zsh.content);
 

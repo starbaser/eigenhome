@@ -20,7 +20,6 @@
   inherit (lib.types) attrsOf str;
 
   # Access systemd.user.services from hjem-compat's bridge if loaded.
-  # The bridge declares options.systemd.user.* — if it's not loaded,
   # config.systemd won't have a "user" key.
   hasUserSection = hasAttr "user" config.systemd;
   services =
@@ -38,7 +37,6 @@
 
   oneshotServices = filterAttrs (_: svc: getType svc == "oneshot") services;
 
-  # Wrapper script: exports Environment, cd to WorkingDirectory, exec ExecStart.
   mkWrapper = name: svc: let
     rawExecStart = svc.Service.ExecStart or "true";
     execStart =
@@ -59,7 +57,6 @@
 
   wrapperPackages = mapAttrsToList mkWrapper simpleServices;
 
-  # Services with WantedBy containing default.target or graphical-session.target.
   autostartServices = filterAttrs (_: svc: let
     wantedBy = toList (attrByPath ["Install" "WantedBy"] [] svc);
   in
@@ -75,7 +72,6 @@
   hasAutostart = autostartServices != {};
   hasOneshot = oneshotServices != {};
 
-  # Warnings for unsupported unit types.
   checkUnsupported = type: let
     units = attrByPath ["systemd" "user" type] {} config;
   in

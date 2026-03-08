@@ -1,8 +1,4 @@
-# Test: Activation DAG runner generates and executes an activation script.
-# Verifies:
-#   - Custom activation entries produce a runnable script
-#   - HM built-in phases (writeBoundary) are filtered out
-#   - The script executes successfully and produces side effects
+# Test: Activation DAG runner — custom entries execute, HM built-in phases filtered.
 {
   hjemModule,
   hjemCompatModule,
@@ -50,17 +46,13 @@ in
       machine.wait_until_succeeds("test -d /run/user/$(id -u alice)")
       machine.wait_until_succeeds("sudo -u alice XDG_RUNTIME_DIR=/run/user/$(id -u alice) systemctl --user is-active systemd-tmpfiles-setup.service")
 
-      # Verify activation script was generated
       machine.succeed("test -L ${userHome}/.local/share/hjem-compat/activate")
 
-      # Verify custom entry is in the script, built-in is filtered
       machine.succeed("grep 'createTestDir' ${userHome}/.local/share/hjem-compat/activate")
       machine.fail("grep 'writeBoundary' ${userHome}/.local/share/hjem-compat/activate")
 
-      # Run the activation script manually
       machine.succeed("su alice --login --command '${userHome}/.local/share/hjem-compat/activate'")
 
-      # Verify the activation produced side effects
       machine.succeed("test -f ${userHome}/.local/share/test-activation/marker")
       machine.succeed("grep 'activated' ${userHome}/.local/share/test-activation/marker")
     '';

@@ -47,7 +47,6 @@
         + builtins.toJSON sorted
       );
 
-  # Remove HM built-in phases that hjem handles natively.
   userEntries = filter (entry: !(builtins.elem entry.name filteredPhases)) sortedEntries;
   hasUserEntries = userEntries != [];
 

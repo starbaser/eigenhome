@@ -18,7 +18,6 @@
     nameValuePair
     ;
 
-  # Translate an HM file entry value to hjem file entry value.
   translateFileValue = entry: {
     inherit (entry) enable;
     source = entry.source;
@@ -72,7 +71,6 @@ in {
       stateHome = config.xdg.state.directory;
     };
 
-    # --- File translation ---
     files = mkIf (hasFiles config.home.file) (translateHomeFileSet config.home.file);
 
     xdg.config.files =
@@ -87,10 +85,8 @@ in {
     xdg.state.files =
       mkIf (hasFiles config.xdg.stateFile) (translateXdgFileSet config.xdg.stateFile);
 
-    # --- Package translation ---
     packages = config.home.packages;
 
-    # --- Session variable translation ---
     environment.sessionVariables = mkMerge [
       # home.sessionVariables + home.sessionPath
       (let

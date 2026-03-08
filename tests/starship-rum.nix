@@ -1,6 +1,4 @@
 # Test: HM starship module with rum zsh active.
-# Verifies: starship shell init routes through rum.programs.zsh.initConfig
-# instead of standalone files.
 {
   hjemModule,
   hjemRumModule,
@@ -49,15 +47,13 @@ in
 
       machine.succeed("su alice --login --command 'which starship'")
 
-      # Starship config file should exist
       machine.succeed("test -e ${userHome}/.config/starship.toml")
 
-      # With rum zsh active, starship init should be in .zshrc (via rum),
-      # NOT in the standalone hm-compat.zsh file
+      # rum zsh routes init to .zshrc, not standalone file
       machine.succeed("grep 'starship init zsh' ${userHome}/.zshrc")
       machine.fail("test -e ${userHome}/.config/zsh/hm-compat.zsh")
 
-      # Bash/fish should still use standalone (no rum modules for those)
+      # bash/fish still standalone (no rum)
       machine.succeed("test -e ${userHome}/.config/bash/hm-compat.sh")
       machine.succeed("test -e ${userHome}/.config/fish/conf.d/hm-compat.fish")
     '';
