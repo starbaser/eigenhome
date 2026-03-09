@@ -19,7 +19,7 @@
   );
 in {
   _module.args = {
-    hmLib = hmLib;
+    inherit hmLib;
     hmExtLib = extendedLib;
     hmSrc = "${home-manager}";
     wrapHmModule = import ./wrap-hm-module.nix {hmExtLib = extendedLib;};

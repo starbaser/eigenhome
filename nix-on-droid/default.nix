@@ -19,8 +19,7 @@
   inherit (lib.options) literalExpression mkOption;
   inherit (lib.types) attrs attrsWith bool listOf raw submoduleWith;
 
-  hjemSrc = "${hjem}";
-  hjem-lib = import "${hjemSrc}/lib.nix" {inherit lib pkgs;};
+  hjem-lib = import "${hjem}/lib.nix" {inherit lib pkgs;};
 
   cfg = config.hjem;
   enabledUsers = filterAttrs (_: u: u.enable) cfg.users;
@@ -82,20 +81,17 @@
         osOptions = options;
       };
     modules =
-      concatLists
       [
-        [
-          "${hjemSrc}/modules/common/user.nix"
-          systemdStub
-          ./service-bridge.nix
-          ({...}: {
-            user = mkDefault config.user.userName;
-            directory = mkDefault config.user.home;
-            clobberFiles = mkDefault cfg.clobberByDefault;
-          })
-        ]
-        cfg.extraModules
-      ];
+        "${hjem}/modules/common/user.nix"
+        systemdStub
+        ./service-bridge.nix
+        ({...}: {
+          user = mkDefault config.user.userName;
+          directory = mkDefault config.user.home;
+          clobberFiles = mkDefault cfg.clobberByDefault;
+        })
+      ]
+      ++ cfg.extraModules;
   };
 in {
   imports = [

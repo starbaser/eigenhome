@@ -47,8 +47,7 @@
     workDir = svc.Service.WorkingDirectory or null;
     description = attrByPath ["Unit" "Description"] name svc;
   in
-    pkgs.writeScriptBin "nod-${name}" ''
-      #!/usr/bin/env bash
+    pkgs.writeShellScriptBin "nod-${name}" ''
       # ${description}
       ${concatMapStringsSep "\n" (e: "export ${toString e}") envVars}
       ${optionalString (workDir != null) "cd \"${toString workDir}\""}

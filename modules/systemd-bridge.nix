@@ -15,7 +15,6 @@
 }: let
   inherit
     (lib)
-    attrNames
     concatStringsSep
     filterAttrs
     isBool
@@ -79,7 +78,7 @@
       then toList install.RequiredBy
       else [];
   in {
-    text = toSystemdIni (cleanUnit def);
+    text = toSystemdIni (cleanUnit (removeAttrs def ["Install"]));
     inherit wantedBy requiredBy;
   };
 

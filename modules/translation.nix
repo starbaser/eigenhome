@@ -21,10 +21,7 @@
   translateFileValue = entry: {
     inherit (entry) enable;
     source = entry.source;
-    executable =
-      if entry.executable == true
-      then true
-      else false;
+    executable = entry.executable == true;
     clobber = entry.force;
   };
 
@@ -94,10 +91,12 @@ in {
         pathEntries = config.home.sessionPath;
       in
         mkIf (vars != {} || pathEntries != []) (
-          vars
-          // (mkIf (pathEntries != []) {
-            PATH = hmExtLib.hm.shell.prependToVar ":" "PATH" pathEntries;
-          })
+          mkMerge [
+            vars
+            (lib.optionalAttrs (pathEntries != []) {
+              PATH = hmExtLib.hm.shell.prependToVar ":" "PATH" pathEntries;
+            })
+          ]
         ))
 
       # home.sessionSearchVariables → colon-joined session variables

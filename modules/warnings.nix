@@ -3,6 +3,7 @@
   config,
   lib,
   options,
+  nixosConfig ? null,
   ...
 }: let
   inherit
@@ -42,14 +43,14 @@
   ) (attrNames allFileSets);
 
   hasActivation = config.home.activation != {};
-  hasNixosModule = options ? osConfig;
+  hasNixosModule = nixosConfig != null;
 
   startServicesChanged = let
     v = config.systemd.user.startServices;
   in
     if isBool v
     then !v
-    else v == "suggest";
+    else v == "suggest" || v == "sd-switch";
 
   systemdSessionVars = config.systemd.user.sessionVariables;
   homeSessionVars = config.home.sessionVariables;

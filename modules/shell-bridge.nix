@@ -44,11 +44,11 @@
       != ""
       || config.programs.zsh.initExtra != ""
       || (allAliases "zsh") != {};
-    content = concatStringsSep "\n" [
+    content = concatStringsSep "\n" (builtins.filter (s: s != "") [
       (optionalString ((allAliases "zsh") != {}) (aliasLines "zsh"))
       config.programs.zsh.initContent
       config.programs.zsh.initExtra
-    ];
+    ]);
   };
 
   zshEnv = {
@@ -72,11 +72,11 @@
       != ""
       || config.programs.bash.bashrcExtra != ""
       || (allAliases "bash") != {};
-    content = concatStringsSep "\n" [
+    content = concatStringsSep "\n" (builtins.filter (s: s != "") [
       (optionalString ((allAliases "bash") != {}) (aliasLines "bash"))
       config.programs.bash.initExtra
       config.programs.bash.bashrcExtra
-    ];
+    ]);
   };
 
   bashProfile = {
@@ -91,12 +91,12 @@
       || config.programs.fish.shellInitLast != ""
       || (allAliases "fish") != {}
       || config.programs.fish.shellAbbrs != {};
-    interactiveContent = concatStringsSep "\n" [
+    interactiveContent = concatStringsSep "\n" (builtins.filter (s: s != "") [
       (optionalString ((allAliases "fish") != {}) fishAliasLines)
       (optionalString (config.programs.fish.shellAbbrs != {}) fishAbbrLines)
       config.programs.fish.interactiveShellInit
       config.programs.fish.shellInitLast
-    ];
+    ]);
     hasInit = config.programs.fish.shellInit != "";
     initContent = config.programs.fish.shellInit;
     hasLogin = config.programs.fish.loginShellInit != "";
@@ -116,58 +116,28 @@
 in {
   config =
     {
-      xdg.config.files = lib.mkMerge [
+      xdg.config.files =
         # Zsh
-        (mkIf (!rumZsh && zsh.hasContent) {
-          "zsh/hm-compat.zsh".text = zsh.content;
-        })
-        (mkIf zshEnv.hasContent {
-          "zsh/hm-compat-env.zsh".text = zshEnv.content;
-        })
-        (mkIf zshLogin.hasContent {
-          "zsh/hm-compat-login.zsh".text = zshLogin.content;
-        })
-        (mkIf zshLogout.hasContent {
-          "zsh/hm-compat-logout.zsh".text = zshLogout.content;
-        })
-
+        optionalAttrs (!rumZsh && zsh.hasContent) { "zsh/hm-compat.zsh".text = zsh.content; }
+        // optionalAttrs zshEnv.hasContent { "zsh/hm-compat-env.zsh".text = zshEnv.content; }
+        // optionalAttrs zshLogin.hasContent { "zsh/hm-compat-login.zsh".text = zshLogin.content; }
+        // optionalAttrs zshLogout.hasContent { "zsh/hm-compat-logout.zsh".text = zshLogout.content; }
         # Bash
-        (mkIf bash.hasContent {
-          "bash/hm-compat.sh".text = bash.content;
-        })
-        (mkIf bashProfile.hasContent {
-          "bash/hm-compat-profile.sh".text = bashProfile.content;
-        })
-
+        // optionalAttrs bash.hasContent { "bash/hm-compat.sh".text = bash.content; }
+        // optionalAttrs bashProfile.hasContent { "bash/hm-compat-profile.sh".text = bashProfile.content; }
         # Fish
-        (mkIf (!rumFish && fish.hasInteractive) {
-          "fish/conf.d/hm-compat.fish".text = fish.interactiveContent;
-        })
-        (mkIf (!rumFish && fish.hasInit) {
-          "fish/conf.d/hm-compat-init.fish".text = fish.initContent;
-        })
-        (mkIf (!rumFish && fish.hasLogin) {
-          "fish/conf.d/hm-compat-login.fish".text = fish.loginContent;
-        })
-
+        // optionalAttrs (!rumFish && fish.hasInteractive) { "fish/conf.d/hm-compat.fish".text = fish.interactiveContent; }
+        // optionalAttrs (!rumFish && fish.hasInit) { "fish/conf.d/hm-compat-init.fish".text = fish.initContent; }
+        // optionalAttrs (!rumFish && fish.hasLogin) { "fish/conf.d/hm-compat-login.fish".text = fish.loginContent; }
         # Nushell
-        (mkIf (!rumNushell && nushell.hasConfig) {
-          "nushell/hm-compat.nu".text = nushell.configContent;
-        })
-        (mkIf (!rumNushell && nushell.hasEnv) {
-          "nushell/hm-compat-env.nu".text = nushell.envContent;
-        })
-
+        // optionalAttrs (!rumNushell && nushell.hasConfig) { "nushell/hm-compat.nu".text = nushell.configContent; }
+        // optionalAttrs (!rumNushell && nushell.hasEnv) { "nushell/hm-compat-env.nu".text = nushell.envContent; }
         # Ion
-        (mkIf (config.programs.ion.initExtra != "") {
-          "ion/hm-compat.ion".text = config.programs.ion.initExtra;
-        })
-      ];
+        // optionalAttrs (config.programs.ion.initExtra != "") { "ion/hm-compat.ion".text = config.programs.ion.initExtra; };
 
-      home.sessionVariables = lib.mkMerge [
-        (mkIf (config.programs.bash.sessionVariables != {}) config.programs.bash.sessionVariables)
-        (mkIf (config.programs.zsh.sessionVariables != {}) config.programs.zsh.sessionVariables)
-      ];
+      home.sessionVariables =
+        config.programs.bash.sessionVariables
+        // config.programs.zsh.sessionVariables;
     }
     # Rum bridge routes: only included when rum modules are loaded.
     // optionalAttrs hasRum {
@@ -175,10 +145,10 @@ in {
 
       rum.programs.fish.config = mkIf (rumFish && (fish.hasInteractive || fish.hasInit)) (
         mkAfter (
-          concatStringsSep "\n" [
+          concatStringsSep "\n" (builtins.filter (s: s != "") [
             fish.initContent
             fish.interactiveContent
-          ]
+          ])
         )
       );
 

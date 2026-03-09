@@ -14,7 +14,6 @@
 }: let
   inherit
     (lib)
-    attrNames
     concatStringsSep
     filter
     mkIf
@@ -22,7 +21,7 @@
 
   # HM built-in activation phases that conflict with hjem's linker or are
   # irrelevant outside HM's generation model.
-  filteredPhases = [
+  filteredPhases = lib.genAttrs [
     "writeBoundary"
     "installPackages"
     "checkLinkTargets"
@@ -31,10 +30,9 @@
     "onFilesChange"
     "createXdgUserDirectories"
     "reloadSystemd"
-  ];
+  ] (_: true);
 
   activation = config.home.activation;
-  hasActivation = activation != {};
 
   sortedEntries = let
     sorted = hmExtLib.hm.dag.topoSort activation;
@@ -47,7 +45,7 @@
         + builtins.toJSON sorted
       );
 
-  userEntries = filter (entry: !(builtins.elem entry.name filteredPhases)) sortedEntries;
+  userEntries = filter (entry: !(filteredPhases ? ${entry.name})) sortedEntries;
   hasUserEntries = userEntries != [];
 
   activationScript = pkgs.writeShellScript "hjem-compat-activate" ''
@@ -78,9 +76,9 @@
     export genProfilePath=""
     export DRY_RUN_CMD=""
     export DRY_RUN_NULL=/dev/null
-    export VERBOSE_ECHO=true
+    export VERBOSE_ECHO=verboseEcho
     export VERBOSE_ARG=""
-    export VERBOSE_RUN=true
+    export VERBOSE_RUN=""
 
     _iNote "Running hjem-compat activation scripts"
 
@@ -93,7 +91,7 @@
     _iNote "hjem-compat activation complete"
   '';
 in {
-  config = mkIf (hasActivation && hasUserEntries) {
+  config = mkIf hasUserEntries {
     xdg.data.files."hjem-compat/activate" = {
       source = activationScript;
       executable = true;

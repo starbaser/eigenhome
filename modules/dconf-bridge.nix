@@ -18,7 +18,7 @@
   # Serialize a Nix value to GVariant text format for dconf keyfiles.
   formatGVariant = v:
     if builtins.isString v
-    then "'${v}'"
+    then "'${builtins.replaceStrings ["'"] ["\\'"] v}'"
     else if builtins.isBool v
     then
       (
@@ -29,7 +29,7 @@
     else if builtins.isInt v
     then toString v
     else if builtins.isFloat v
-    then toString v
+    then builtins.toJSON v
     else if builtins.isList v
     then "[${concatStringsSep ", " (map formatGVariant v)}]"
     else builtins.toJSON v;

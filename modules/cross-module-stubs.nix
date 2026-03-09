@@ -56,9 +56,7 @@ in {
     # nixpkgs — HM/Stylix modules set nixpkgs.overlays in their module context.
     # Accepted as a sink; overlays are applied at the NixOS layer, not hjem.
     nixpkgs = mkOption {
-      type = types.submodule {
-        freeformType = types.attrsOf types.anything;
-      };
+      type = types.attrsOf types.anything;
       default = {};
       description = "Stub for HM nixpkgs namespace (overlays applied at NixOS level).";
     };
@@ -66,45 +64,35 @@ in {
     # i18n — input method framework (fcitx5, etc.). Stylix's fcitx5 target
     # writes here even when disabled (mkIf false still requires option path).
     i18n = mkOption {
-      type = types.submodule {
-        freeformType = types.attrsOf types.anything;
-      };
+      type = types.attrsOf types.anything;
       default = {};
       description = "Input method config (accepted for compat).";
     };
 
     # xsession — X11 session config (accept and discard on Wayland).
     xsession = mkOption {
-      type = types.submodule {
-        freeformType = types.attrsOf types.anything;
-      };
+      type = types.attrsOf types.anything;
       default = {};
       description = "X11 session config (accepted, not used on Wayland).";
     };
 
     # Fontconfig defaults — consumed by fontconfig-bridge.nix.
     fonts.fontconfig = mkOption {
-      type = types.submodule {
-        freeformType = types.attrsOf types.anything;
-      };
+      type = types.attrsOf types.anything;
       default = {};
       description = "Fontconfig defaults (translated to conf.d XML by fontconfig-bridge).";
     };
 
     # xfconf — XFCE settings. Stylix's XFCE target writes here even when disabled.
     xfconf = mkOption {
-      type = types.submodule {
-        freeformType = types.attrsOf types.anything;
-      };
+      type = types.attrsOf types.anything;
       default = {};
       description = "XFCE xfconf settings (accepted for compat).";
     };
 
     # X resources — accept and discard on Wayland.
     xresources = mkOption {
-      type = types.submodule {
-        freeformType = types.attrsOf types.anything;
-      };
+      type = types.attrsOf types.anything;
       default = {};
       description = "Stub for HM xresources namespace (not bridged on Wayland).";
     };
