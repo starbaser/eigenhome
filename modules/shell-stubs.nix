@@ -60,6 +60,11 @@ in {
         default = {};
         description = "Fish abbreviations.";
       };
+      functions = mkOption {
+        type = types.attrsOf types.lines;
+        default = {};
+        description = "Fish functions, keyed by function name (body only).";
+      };
     };
 
     ion = {

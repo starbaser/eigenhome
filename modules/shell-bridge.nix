@@ -103,6 +103,16 @@
     loginContent = config.programs.fish.loginShellInit;
   };
 
+  fishFunctions = lib.mapAttrs' (name: body:
+    lib.nameValuePair "fish/functions/${name}.fish" {
+      text = ''
+        function ${name}
+        ${body}
+        end
+      '';
+    }
+  ) config.programs.fish.functions;
+
   nushell = {
     hasConfig = config.programs.nushell.extraConfig != "";
     configContent = config.programs.nushell.extraConfig;
@@ -129,6 +139,7 @@ in {
         // optionalAttrs (!rumFish && fish.hasInteractive) { "fish/conf.d/hm-compat.fish".text = fish.interactiveContent; }
         // optionalAttrs (!rumFish && fish.hasInit) { "fish/conf.d/hm-compat-init.fish".text = fish.initContent; }
         // optionalAttrs (!rumFish && fish.hasLogin) { "fish/conf.d/hm-compat-login.fish".text = fish.loginContent; }
+        // optionalAttrs (!rumFish && config.programs.fish.functions != {}) fishFunctions
         # Nushell
         // optionalAttrs (!rumNushell && nushell.hasConfig) { "nushell/hm-compat.nu".text = nushell.configContent; }
         // optionalAttrs (!rumNushell && nushell.hasEnv) { "nushell/hm-compat-env.nu".text = nushell.envContent; }
@@ -155,6 +166,9 @@ in {
       rum.programs.fish.earlyConfigFiles = mkIf (rumFish && fish.hasLogin) {
         "hm-compat-login" = fish.loginContent;
       };
+
+      rum.programs.fish.functions = mkIf (rumFish && config.programs.fish.functions != {})
+        config.programs.fish.functions;
 
       rum.programs.nushell.extraConfig =
         mkIf (rumNushell && nushell.hasConfig) (mkAfter nushell.configContent);

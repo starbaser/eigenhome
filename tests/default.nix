@@ -55,4 +55,8 @@ in {
   firefox = pkgs.callPackage ./firefox.nix {
     inherit hjemModule hjemCompatModule hjemTest hmSrc wrapHmModule;
   };
+
+  yazi = pkgs.callPackage ./yazi.nix {
+    inherit hjemModule hjemCompatModule hjemTest hmSrc wrapHmModule;
+  };
 }
