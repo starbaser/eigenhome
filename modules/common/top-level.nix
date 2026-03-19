@@ -1,0 +1,127 @@
+{
+  hjemSubmodule,
+  _class,
+}: {
+  lib,
+  pkgs,
+  config,
+  ...
+}: let
+  inherit (builtins) concatLists mapAttrs;
+  inherit (lib.attrsets) filterAttrs mapAttrsToList;
+  inherit (lib.lists) optional;
+  inherit (lib.options) literalExpression mkOption mkPackageOption;
+  inherit (lib.types) attrs attrsWith either listOf raw singleLineStr;
+
+  cfg = config.eigenhome;
+
+  enabledUsers = filterAttrs (_: u: u.enable) cfg.users;
+in {
+  inherit _class;
+
+  options.eigenhome = {
+    users = mkOption {
+      default = {};
+      type = attrsWith {
+        elemType = hjemSubmodule;
+        placeholder = "username";
+      };
+      description = "eigenhome-managed user configurations.";
+    };
+
+    extraModules = mkOption {
+      type = listOf raw;
+      default = [];
+      description = ''
+        Additional modules to be evaluated as a part of the users module
+        inside {option}`config.eigenhome.users.<username>`. This can be used to
+        extend each user configuration with additional options.
+      '';
+    };
+
+    specialArgs = mkOption {
+      type = attrs;
+      default = {};
+      example = literalExpression "{ inherit inputs; }";
+      description = ''
+        Additional `specialArgs` are passed to eigenhome, allowing extra arguments
+        to be passed down to all imported modules.
+      '';
+    };
+
+    linker =
+      mkPackageOption pkgs "smfh" {nullable = true;}
+      // {
+        description = ''
+          Package to use to link files.
+
+          By default, we use `smfh`, our own file linker.
+
+          Setting this to `null` will use `systemd-tmpfiles`,
+          which is only supported on Linux.
+
+          `systemd-tmpfiles` is more mature, but it has the downside of
+          leaving behind symlinks that may not get invalidated until the next GC,
+          if an entry is removed from {option}`eigenhome.<user>.files`.
+
+          Specifying a package will use a custom file linker that uses an
+          internally-generated manifest. The custom file linker must use this
+          manifest to create or remove links as needed, by comparing the manifest
+          of the currently activated system with that of the new system.
+          This prevents dangling symlinks when an entry is removed from
+          {option}`eigenhome.<user>.files`.
+        '';
+      };
+
+    linkerOptions = mkOption {
+      default = [];
+      description = ''
+        Additional arguments to pass to the linker.
+
+        This is for external linker modules to set, to allow extending the default set of eigenhome behaviours.
+        It accepts either a list of strings, which will be passed directly as arguments, or an attribute set, which will be
+        serialized to JSON and passed as `--linker-opts options.json`.
+      '';
+      type = either (listOf singleLineStr) attrs;
+    };
+  };
+
+  config = {
+    users.users = (mapAttrs (_: v: {inherit (v) packages;})) enabledUsers;
+
+    assertions =
+      concatLists
+      (mapAttrsToList (user: config:
+        map ({
+          assertion,
+          message,
+          ...
+        }: {
+          inherit assertion;
+          message = "${user} profile: ${message}";
+        })
+        config.assertions)
+      enabledUsers)
+      ++ [
+        {
+          assertion = cfg.linker == null -> pkgs.stdenv.hostPlatform.isLinux;
+          message = "The systemd-tmpfiles linker is only supported on Linux; on other platforms, use the manifest linker.";
+        }
+      ];
+
+    warnings =
+      concatLists
+      (mapAttrsToList (
+          user: v:
+            map (
+              warning: "${user} profile: ${warning}"
+            )
+            v.warnings
+        )
+        enabledUsers)
+      ++ optional
+      (enabledUsers == {}) ''
+        You have imported eigenhome, but you have not enabled eigenhome for any users.
+      '';
+  };
+}
