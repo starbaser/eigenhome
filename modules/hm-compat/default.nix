@@ -17,7 +17,6 @@ in {
     ./systemd-bridge.nix
     ./cross-module-stubs.nix
     (import ./programs-stubs.nix {inherit hmSrc wrapHmModule;})
-    (wrapHmModule "${hmSrc}/modules/misc/mozilla-messaging-hosts.nix")
     ./cursor-bridge.nix
     ./dconf-bridge.nix
     ./fontconfig-bridge.nix

@@ -119,6 +119,15 @@ in {
       description = "Stub for HM dbus namespace (accepted for compat).";
     };
 
+    # mozilla — browser modules (librewolf, floorp) set native messaging hosts.
+    # Uses submodule so user-imported HM mozilla-messaging-hosts.nix can
+    # extend with typed sub-options without conflicting.
+    mozilla = mkOption {
+      type = types.submodule {freeformType = types.attrsOf types.anything;};
+      default = {};
+      description = "Mozilla native messaging host config (extended by HM mozilla module).";
+    };
+
     # submoduleSupport — HM's home-manager.nix reads this to gate behavior.
     submoduleSupport.enable = mkOption {
       type = types.bool;

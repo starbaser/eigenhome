@@ -27,6 +27,7 @@ in
         imports = [
           eigenhomeHmCompat
           (wrapHmModule "${hmSrc}/modules/programs/firefox/default.nix")
+          (wrapHmModule "${hmSrc}/modules/misc/mozilla-messaging-hosts.nix")
         ];
 
         programs.firefox = {
