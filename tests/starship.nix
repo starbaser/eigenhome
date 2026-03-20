@@ -25,7 +25,6 @@ in
         enable = true;
         imports = [
           eigenhomeHmCompat
-          (wrapHmModule "${hmSrc}/modules/programs/starship.nix")
         ];
 
         programs.starship = {

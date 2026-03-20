@@ -112,6 +112,20 @@ in {
       description = "Stub for HM services.* namespace (not bridged).";
     };
 
+    # dbus — ghostty and other modules set dbus.packages.
+    dbus = mkOption {
+      type = types.attrsOf types.anything;
+      default = {};
+      description = "Stub for HM dbus namespace (accepted for compat).";
+    };
+
+    # submoduleSupport — HM's home-manager.nix reads this to gate behavior.
+    submoduleSupport.enable = mkOption {
+      type = types.bool;
+      default = false;
+      description = "HM submodule support flag (accepted for compat).";
+    };
+
     # Darwin stubs — HM modules conditionally write to these on macOS.
     launchd.agents = mkOption {
       type = types.attrsOf types.anything;

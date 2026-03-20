@@ -1,15 +1,22 @@
-# Freeform program stubs for HM program namespaces.
+# HM program module loader with freeform fallback.
 #
 # Stylix (and other meta-modules) import ALL their target modules, even
 # disabled ones. Each target writes to programs.X.* wrapped in mkIf false,
-# but the module system still requires the option path to exist. This
-# module declares freeform submodule stubs for all known program namespaces.
+# but the module system still requires the option path to exist.
+#
+# For programs with upstream HM modules, we import the actual module via
+# wrapHmModule — this provides typed options AND the config block that
+# generates home.file entries (CSS snippets, appearance.json, etc.).
+#
+# For programs without HM modules (third-party: nixcord, nixvim, spicetify),
+# we declare freeform submodule stubs to accept their option writes.
 #
 # Programs already declared with typed options elsewhere are excluded:
 #   shell-stubs.nix: bash, zsh, fish, ion, nushell
 #   cross-module-stubs.nix: gpg, delta, diff-so-fancy, difftastic,
 #                           diff-highlight, patdiff, riff
 #   firefox-config flake: firefox
+{hmSrc, wrapHmModule}:
 {lib, ...}: let
   inherit (lib) genAttrs mkOption types;
 
@@ -30,7 +37,9 @@
     "firefox"
   ];
 
-  # All programs that Stylix and common HM meta-modules write to.
+  # All programs that Stylix, common HM meta-modules, and cross-referenced
+  # HM program modules write to. Programs with upstream HM modules are
+  # auto-imported; the rest get freeform stubs.
   allPrograms = [
     "alacritty"
     "anki"
@@ -51,6 +60,7 @@
     "fuzzel"
     "fzf"
     "ghostty"
+    "git"
     "gitui"
     "halloy"
     "helix"
@@ -103,9 +113,24 @@
     "zen-browser"
   ];
 
-  needsStub = builtins.filter (p: !(builtins.elem p alreadyDeclared)) allPrograms;
+  needsHandling = builtins.filter (p: !(builtins.elem p alreadyDeclared)) allPrograms;
+
+  # Resolve HM module path: file.nix or directory/default.nix.
+  hmModulePath = name: let
+    filePath = "${hmSrc}/modules/programs/${name}.nix";
+    dirPath = "${hmSrc}/modules/programs/${name}/default.nix";
+  in
+    if builtins.pathExists filePath then filePath
+    else if builtins.pathExists dirPath then dirPath
+    else null;
+
+  # Split: programs with upstream HM modules vs. third-party stubs.
+  withHmModule = builtins.filter (p: hmModulePath p != null) needsHandling;
+  withoutHmModule = builtins.filter (p: hmModulePath p == null) needsHandling;
 in {
-  options.programs = genAttrs needsStub (_: mkOption {
+  imports = map (p: wrapHmModule (hmModulePath p)) withHmModule;
+
+  options.programs = genAttrs withoutHmModule (_: mkOption {
     type = types.submodule {freeformType = types.attrsOf types.anything;};
     default = {};
     description = "Freeform stub for HM program compat.";

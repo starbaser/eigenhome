@@ -1,7 +1,10 @@
 {
   home-manager,
   hmExtLib,
-}: {
+}: let
+  hmSrc = "${home-manager}";
+  wrapHmModule = import ./wrap-hm-module.nix {inherit hmExtLib;};
+in {
   imports = [
     (import ./lib-hm.nix {inherit home-manager hmExtLib;})
     ./home-options.nix
@@ -13,7 +16,8 @@
     ./activation-runner.nix
     ./systemd-bridge.nix
     ./cross-module-stubs.nix
-    ./programs-stubs.nix
+    (import ./programs-stubs.nix {inherit hmSrc wrapHmModule;})
+    (wrapHmModule "${hmSrc}/modules/misc/mozilla-messaging-hosts.nix")
     ./cursor-bridge.nix
     ./dconf-bridge.nix
     ./fontconfig-bridge.nix

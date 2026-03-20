@@ -159,6 +159,12 @@ in {
       default = "";
       description = "Accepted for compatibility. Not used by eigenhome.";
     };
+
+    tmpfiles.rules = mkOption {
+      type = types.listOf types.str;
+      default = [];
+      description = "Accepted for compatibility. Not used by eigenhome.";
+    };
   };
 
   config = mkIf cfg.enable {

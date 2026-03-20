@@ -27,7 +27,6 @@ in
         imports = [
           eigenhomeRum
           eigenhomeHmCompat
-          (wrapHmModule "${hmSrc}/modules/programs/starship.nix")
         ];
 
         # Enable rum's zsh module

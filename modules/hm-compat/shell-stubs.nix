@@ -1,6 +1,10 @@
 # Shell option stubs — accepts writes from HM program modules.
 # HM modules write to programs.zsh.initContent, programs.bash.initExtra, etc.
 # These options collect the content; shell-bridge.nix routes it to rum or files.
+#
+# Freeform submodules: typed options for what shell-bridge.nix reads, plus
+# freeform fallback for arbitrary writes from imported HM program modules
+# (e.g., git.nix writes programs.nushell.environmentVariables).
 {lib, ...}: let
   inherit (lib) mkOption types;
 
@@ -26,9 +30,19 @@
     default = {};
     description = "Per-shell session variables.";
   };
+
+  # Freeform shell program submodule: typed options + catch-all for HM compat.
+  mkShellProg = opts:
+    mkOption {
+      type = types.submodule {
+        freeformType = types.attrsOf types.anything;
+        options = opts;
+      };
+      default = {};
+    };
 in {
   options.programs = {
-    bash = {
+    bash = mkShellProg {
       enable = lib.mkEnableOption "bash configuration";
       initExtra = linesOpt "Extra commands for .bashrc.";
       bashrcExtra = linesOpt "Extra .bashrc content (appended after initExtra).";
@@ -37,7 +51,7 @@ in {
       sessionVariables = sessionVarsOpt;
     };
 
-    zsh = {
+    zsh = mkShellProg {
       enable = lib.mkEnableOption "zsh configuration";
       initContent = linesOpt "Content for .zshrc (main init).";
       initExtra = linesOpt "Extra commands appended to .zshrc.";
@@ -48,7 +62,7 @@ in {
       sessionVariables = sessionVarsOpt;
     };
 
-    fish = {
+    fish = mkShellProg {
       enable = lib.mkEnableOption "fish configuration";
       shellInit = linesOpt "Commands run on every fish instance.";
       interactiveShellInit = linesOpt "Commands run on interactive fish instances.";
@@ -67,12 +81,12 @@ in {
       };
     };
 
-    ion = {
+    ion = mkShellProg {
       enable = lib.mkEnableOption "ion configuration";
       initExtra = linesOpt "Extra commands for ion init.";
     };
 
-    nushell = {
+    nushell = mkShellProg {
       enable = lib.mkEnableOption "nushell configuration";
       extraConfig = linesOpt "Extra config.nu content.";
       extraEnv = linesOpt "Extra env.nu content.";
