@@ -54,8 +54,10 @@
 
   systemdSessionVars = config.systemd.user.sessionVariables;
   homeSessionVars = config.home.sessionVariables;
+  # Only flag overlapping keys where the values differ — same-value duplicates
+  # are an intentional HM pattern (e.g. qt.nix sets identical values in both).
   overlappingVars = filter (
-    name: homeSessionVars ? ${name}
+    name: homeSessionVars ? ${name} && homeSessionVars.${name} != systemdSessionVars.${name}
   ) (attrNames systemdSessionVars);
 
   dualPrograms = [
