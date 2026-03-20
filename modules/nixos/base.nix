@@ -74,6 +74,7 @@
       // {
         inherit hjem-lib osConfig pkgs utils;
         nixosConfig = osConfig;
+        darwinConfig = null;
         osOptions = options;
       };
     modules =
