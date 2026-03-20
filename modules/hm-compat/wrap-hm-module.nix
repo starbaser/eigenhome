@@ -12,10 +12,21 @@
 # This allows wrapping both HM source paths and flake module outputs:
 #   wrapHmModule "${hmSrc}/modules/programs/foo.nix"   # path
 #   wrapHmModule inputs.stylix.homeModules.stylix       # flake output (function)
+#
+# Path/string inputs produce keyed modules for deduplication: if the same HM
+# module is imported by both the compat layer and user config, the module
+# system sees the same key and processes it only once.
 {hmExtLib}: let
   wrapImport = mod:
     if builtins.isPath mod || builtins.isString mod then
-      wrapImport (import mod)
+      let
+        key = "hm-compat:${toString mod}";
+        wrapped = wrapImport (import mod);
+      in
+        if builtins.isFunction wrapped then
+          {inherit key; __functor = _: wrapped;}
+        else
+          wrapped // {inherit key;}
     else if builtins.isFunction mod then
       args: wrapImport (mod (args // {lib = hmExtLib;}))
     else if builtins.isAttrs mod && mod ? imports then
