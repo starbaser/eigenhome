@@ -1,9 +1,22 @@
-# HM compatibility layer — Phase 2
-# Provides home.file, xdg.configFile, home.activation, programs.* stubs, etc.
 {
   home-manager,
   hmExtLib,
 }: {
-  # Stub: returns empty module set until Phase 2 implementation
-  imports = [];
+  imports = [
+    (import ./lib-hm.nix {inherit home-manager hmExtLib;})
+    ./home-options.nix
+    ./xdg-options.nix
+    ./config-lib.nix
+    ./translation.nix
+    ./shell-stubs.nix
+    ./shell-bridge.nix
+    ./activation-runner.nix
+    ./systemd-bridge.nix
+    ./cross-module-stubs.nix
+    ./programs-stubs.nix
+    ./cursor-bridge.nix
+    ./dconf-bridge.nix
+    ./fontconfig-bridge.nix
+    ./warnings.nix
+  ];
 }

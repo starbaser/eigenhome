@@ -47,11 +47,11 @@
       };
     };
 
-    eigenhomeModules = {
+    homeModules = {
       hm-compat = import ./modules/hm-compat {
         inherit home-manager hmExtLib;
       };
-      default = self.eigenhomeModules.hm-compat;
+      default = self.homeModules.hm-compat;
     };
 
     packages = forAllSystems (system: {
