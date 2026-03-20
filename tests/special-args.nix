@@ -34,7 +34,8 @@ in
 
     testScript = ''
       machine.succeed("loginctl enable-linger alice")
-      machine.wait_until_succeeds("systemctl --user --machine=alice@ is-active systemd-tmpfiles-setup.service")
+      machine.wait_for_unit("user@1000.service")
+      machine.wait_until_succeeds("test -L ~alice/.config/fooconfig")
 
       machine.succeed("grep alice ~alice/.config/fooconfig")
     '';

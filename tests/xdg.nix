@@ -86,7 +86,8 @@ in
 
     testScript = ''
       machine.succeed("loginctl enable-linger alice")
-      machine.wait_until_succeeds("systemctl --user --machine=alice@ is-active systemd-tmpfiles-setup.service")
+      machine.wait_for_unit("user@1000.service")
+      machine.wait_until_succeeds("test -L ~alice/customCacheDirectory/foo")
 
       with subtest("XDG basedir spec files created"):
         machine.succeed("[ -L ~alice/customCacheDirectory/foo ]")

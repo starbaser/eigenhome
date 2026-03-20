@@ -289,11 +289,12 @@ in {
       ini = pkgs.formats.ini {listToValue = concatStringsSep ";";};
     in
       mkIf (any id (attrValues nonDefault)) {
-        source = ini.generate "mimeapps.list" {
-          "Added Associations" = mkIf nonDefault.added cfg.xdg.mime-apps.added-associations;
-          "Removed Associations" = mkIf nonDefault.removed cfg.xdg.mime-apps.removed-associations;
-          "Default Applications" = mkIf nonDefault.default cfg.xdg.mime-apps.default-applications;
-        };
+        source = ini.generate "mimeapps.list" (
+          {}
+          // lib.optionalAttrs nonDefault.added {"Added Associations" = cfg.xdg.mime-apps.added-associations;}
+          // lib.optionalAttrs nonDefault.removed {"Removed Associations" = cfg.xdg.mime-apps.removed-associations;}
+          // lib.optionalAttrs nonDefault.default {"Default Applications" = cfg.xdg.mime-apps.default-applications;}
+        );
       };
 
     assertions =
