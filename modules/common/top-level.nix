@@ -1,5 +1,5 @@
 {
-  hjemSubmodule,
+  eigenhomeSubmodule,
   _class,
 }: {
   lib,
@@ -23,7 +23,7 @@ in {
     users = mkOption {
       default = {};
       type = attrsWith {
-        elemType = hjemSubmodule;
+        elemType = eigenhomeSubmodule;
         placeholder = "username";
       };
       description = "eigenhome-managed user configurations.";

@@ -1,7 +1,7 @@
 {
   self,
   home-manager,
-  hjem-rum,
+  rum,
   hmExtLib,
   pkgs,
 }: let

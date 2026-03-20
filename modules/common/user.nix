@@ -4,14 +4,14 @@
 # be avoided here.
 {
   config,
-  eigenhome-lib,
+  hjem-lib,
   lib,
   name,
   options,
   pkgs,
   ...
 }: let
-  inherit (eigenhome-lib) envVarType listOrSingletonOf toEnv;
+  inherit (hjem-lib) envVarType listOrSingletonOf toEnv;
   inherit (lib.attrsets) attrValues filterAttrs mapAttrs mapAttrsToList;
   inherit (lib.lists) any;
   inherit (lib.modules) mkIf;
@@ -24,7 +24,7 @@
 
   mkFileType = dir:
     attrsWith {
-      elemType = eigenhome-lib.mkFileEntry {
+      elemType = hjem-lib.mkFileEntry {
         baseDir = dir;
         defaultClobber = cfg.clobberFiles;
         defaultClobberText = literalExpression "config.eigenhome.users.${name}.clobberFiles";
@@ -48,7 +48,7 @@
       }
     ]) (filterAttrs (_: f: f.enable) files));
 in {
-  _class = "hjem";
+  _class = "eigenhome";
 
   imports = [
     # Makes "assertions" option available without having to duplicate the work

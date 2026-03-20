@@ -1,16 +1,16 @@
 rec {
   eigenhome = {
     imports = [
-      eigenhome-lib
+      hjem-lib
       ./base.nix
     ];
   };
-  eigenhome-lib = {
+  hjem-lib = {
     lib,
     pkgs,
     ...
   }: {
-    _module.args.eigenhome-lib = import ../../lib {inherit lib pkgs;};
+    _module.args.hjem-lib = import ../../lib {inherit lib pkgs;};
   };
   default = eigenhome;
 }

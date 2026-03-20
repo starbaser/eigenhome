@@ -1,6 +1,6 @@
 {
   config,
-  eigenhome-lib,
+  hjem-lib,
   lib,
   options,
   pkgs,
@@ -8,8 +8,7 @@
   ...
 }: let
   inherit (builtins) attrNames attrValues concatLists concatMap concatStringsSep filter mapAttrs toJSON typeOf;
-  eigenhomeLib = eigenhome-lib;
-  inherit (eigenhomeLib) fileToJson;
+  inherit (hjem-lib) fileToJson;
   inherit (lib.attrsets) filterAttrs optionalAttrs;
   inherit (lib.modules) importApply mkDefault mkIf mkMerge;
   inherit (lib.strings) optionalString;
@@ -67,15 +66,13 @@
       paths = map writeManifest (attrNames enabledUsers);
     };
 
-  hjemSubmodule = submoduleWith {
+  eigenhomeSubmodule = submoduleWith {
     description = "eigenhome submodule for NixOS";
-    class = "hjem";
+    class = "eigenhome";
     specialArgs =
       cfg.specialArgs
       // {
-        eigenhome-lib = eigenhomeLib;
-        hjem-lib = eigenhomeLib;
-        inherit osConfig pkgs utils;
+        inherit hjem-lib osConfig pkgs utils;
         osOptions = options;
       };
     modules =
@@ -109,7 +106,7 @@ in {
   inherit _class;
 
   imports = [
-    (importApply ../common/top-level.nix {inherit hjemSubmodule _class;})
+    (importApply ../common/top-level.nix {inherit eigenhomeSubmodule _class;})
   ];
 
   config = mkMerge [

@@ -14,7 +14,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    hjem-rum = {
+    rum = {
       url = "github:snugnug/hjem-rum";
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -25,7 +25,7 @@
     nixpkgs,
     smfh,
     home-manager,
-    hjem-rum,
+    rum,
     ...
   }: let
     supportedSystems = ["x86_64-linux" "aarch64-linux"];
@@ -37,7 +37,7 @@
     coreModules = import ./modules/nixos;
   in {
     nixosModules = {
-      inherit (coreModules) eigenhome eigenhome-lib;
+      inherit (coreModules) eigenhome hjem-lib;
       activation = ./nixos/activation.nix;
       default = {
         imports = [
@@ -61,7 +61,7 @@
     checks = forAllSystems (
       system:
         import ./tests {
-          inherit self home-manager hjem-rum hmExtLib;
+          inherit self home-manager rum hmExtLib;
           pkgs = nixpkgs.legacyPackages.${system};
         }
     );
