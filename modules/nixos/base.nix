@@ -73,6 +73,7 @@
       cfg.specialArgs
       // {
         inherit hjem-lib osConfig pkgs utils;
+        nixosConfig = osConfig;
         osOptions = options;
       };
     modules =
