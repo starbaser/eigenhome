@@ -54,6 +54,9 @@
       default = self.homeModules.hm-compat;
     };
 
+    nixOnDroidModules.default = import ./nix-on-droid {eigenhome = self;};
+
+
     packages = forAllSystems (system: {
       smfh = smfh.packages.${system}.smfh;
     });
