@@ -3,7 +3,7 @@
   config,
   lib,
   options,
-  nixosConfig ? null,
+  osConfig ? null,
   ...
 }: let
   inherit
@@ -43,7 +43,7 @@
   ) (attrNames allFileSets);
 
   hasActivation = config.home.activation != {};
-  hasNixosModule = nixosConfig != null;
+  hasNixosModule = osConfig != null;
 
   startServicesChanged = let
     v = config.systemd.user.startServices;
