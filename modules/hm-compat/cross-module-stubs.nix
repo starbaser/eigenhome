@@ -108,7 +108,7 @@ in {
     # Distinct from systemd.user.services (declared in systemd-bridge.nix).
     # Uses submodule so wrapped HM modules can extend with typed sub-options.
     services = mkOption {
-      type = types.attrsOf (types.submodule {freeformType = types.attrsOf types.anything;});
+      type = types.submodule {freeformType = types.attrsOf types.anything;};
       default = {};
       description = "Stub for HM services.* namespace (not bridged).";
     };
