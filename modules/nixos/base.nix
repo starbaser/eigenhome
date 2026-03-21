@@ -37,28 +37,57 @@
   newManifests = let
     writeManifest = username: let
       name = "manifest-${username}.json";
-    in
-      pkgs.writeTextFile {
-        inherit name;
-        destination = "/${name}";
-        text = toJSON {
-          version = 3;
-          files = concatMap (
-            flip pipe [
-              attrValues
-              (filter (x: x.enable))
-              (map fileToJson)
-            ]
-          ) (userFiles cfg.users.${username});
-        };
-        checkPhase = ''
-          set -e
-          CUE_CACHE_DIR=$(pwd)/.cache
-          CUE_CONFIG_DIR=$(pwd)/.config
-
-          ${getExe pkgs.cue} vet -c ${../../manifest/v3.cue} $target
-        '';
+      prelimManifest = toJSON {
+        version = 3;
+        files = concatMap (
+          flip pipe [
+            attrValues
+            (filter (x: x.enable))
+            (map fileToJson)
+          ]
+        ) (userFiles cfg.users.${username});
       };
+    in
+      pkgs.runCommand name {
+        passAsFile = ["manifest"];
+        manifest = prelimManifest;
+      } ''
+        mkdir -p $out
+
+        # Expand recursive directory entries into individual symlinks.
+        ${pkgs.python3.interpreter} -c '
+import json, os, sys
+
+with open(os.environ["manifestPath"]) as f:
+    manifest = json.load(f)
+
+expanded = []
+for entry in manifest["files"]:
+    recursive = entry.pop("recursive", False)
+    if recursive and entry.get("source") and os.path.isdir(entry["source"]):
+        source_dir = entry["source"]
+        target_dir = entry["target"]
+        base = {k: v for k, v in entry.items() if k not in ("source", "target")}
+        for root, _, files in os.walk(source_dir):
+            for fname in sorted(files):
+                src = os.path.join(root, fname)
+                rel = os.path.relpath(src, source_dir)
+                new_entry = dict(base)
+                new_entry["source"] = src
+                new_entry["target"] = os.path.join(target_dir, rel)
+                expanded.append(new_entry)
+    else:
+        expanded.append(entry)
+
+manifest["files"] = expanded
+with open(sys.argv[1], "w") as f:
+    json.dump(manifest, f)
+        ' "$out/${name}"
+
+        CUE_CACHE_DIR=$(pwd)/.cache
+        CUE_CONFIG_DIR=$(pwd)/.config
+        ${getExe pkgs.cue} vet -c ${../../manifest/v3.cue} "$out/${name}"
+      '';
   in
     pkgs.symlinkJoin
     {

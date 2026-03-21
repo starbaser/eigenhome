@@ -3,7 +3,7 @@
   pkgs,
 }: let
   inherit (builtins) isList;
-  inherit (lib.attrsets) filterAttrs;
+  inherit (lib.attrsets) filterAttrs optionalAttrs;
   inherit (lib.lists) toList;
   inherit (lib.strings) concatMapStringsSep;
   inherit (lib.types) attrsOf coercedTo either int listOf nullOr oneOf path str;
@@ -27,7 +27,8 @@ in rec {
         type
         uid
         ;
-    };
+    }
+    // optionalAttrs f.recursive {recursive = true;};
 
   toEnv = env:
     if isList env

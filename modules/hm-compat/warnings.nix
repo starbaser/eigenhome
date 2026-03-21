@@ -24,24 +24,6 @@
     "xdg.stateFile" = config.xdg.stateFile;
   };
 
-  recursiveFiles = concatMap (
-    setName: let
-      fileSet = allFileSets.${setName};
-    in
-      map (name: "${setName}.\"${name}\".recursive") (
-        attrNames (filterAttrs (_: f: f.recursive or false) fileSet)
-      )
-  ) (attrNames allFileSets);
-
-  onChangeFiles = concatMap (
-    setName: let
-      fileSet = allFileSets.${setName};
-    in
-      map (name: "${setName}.\"${name}\".onChange") (
-        attrNames (filterAttrs (_: f: (f.onChange or "") != "") fileSet)
-      )
-  ) (attrNames allFileSets);
-
   hasActivation = config.home.activation != {};
   hasNixosModule = osConfig != null;
 
@@ -86,17 +68,7 @@
   conflicts = filter (name: rumProgramEnabled name && hmProgramEnabled name) dualPrograms;
 in {
   config.warnings =
-    (optional (recursiveFiles != []) ''
-      eigenhome: The following files use 'recursive = true', which is not supported by eigenhome.
-      Directories will be symlinked as a whole instead of per-leaf.
-      Affected: ${lib.concatStringsSep ", " recursiveFiles}
-    '')
-    ++ (optional (onChangeFiles != []) ''
-      eigenhome: The following files use 'onChange', which is not supported by eigenhome.
-      Post-change hooks will not be executed.
-      Affected: ${lib.concatStringsSep ", " onChangeFiles}
-    '')
-    ++ (optional (hasActivation && !hasNixosModule) ''
+    (optional (hasActivation && !hasNixosModule) ''
       eigenhome: home.activation scripts are defined but the NixOS activation module
       is not imported. Add eigenhome's nixosModules.default to your NixOS configuration
       to enable activation script execution after file linking.

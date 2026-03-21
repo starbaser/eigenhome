@@ -11,19 +11,59 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }: let
+  inherit (builtins) attrValues concatLists;
   inherit
     (lib)
     attrNames
+    concatStringsSep
+    filter
     filterAttrs
+    mapAttrs
+    mapAttrsToList
     mkIf
+    optionalString
     ;
 
   cfg = config.eigenhome;
   enabledUsers = filterAttrs (_: u: u.enable) cfg.users;
   hasUsers = enabledUsers != {};
   hasLinker = cfg.linker != null;
+
+  allUserFiles = user:
+    concatLists (map attrValues [
+      user.files
+      user.xdg.cache.files
+      user.xdg.config.files
+      user.xdg.data.files
+      user.xdg.state.files
+    ]);
+
+  userOnChangeScripts = mapAttrs (username: user: let
+    files = filter (f: f.enable && f.onChange != "") (allUserFiles user);
+  in
+    if files == []
+    then null
+    else
+      pkgs.writeShellScript "eigenhome-onchange-${username}" (
+        concatStringsSep "\n" (map (f: ''
+          # onChange: ${f.target}
+          ${f.onChange}
+        '') files)
+      ))
+    enabledUsers;
+
+  onChangeDir = let
+    scripts = filterAttrs (_: s: s != null) userOnChangeScripts;
+  in
+    if scripts == {}
+    then null
+    else
+      pkgs.linkFarm "eigenhome-onchange" (
+        mapAttrsToList (name: path: {inherit name path;}) scripts
+      );
 in {
   config = mkIf (hasUsers && hasLinker) {
     systemd.services."eigenhome-user-activation@" = {
@@ -46,6 +86,14 @@ in {
         if [ -x "$activate" ]; then
           "$activate"
         fi
+
+        ${optionalString (onChangeDir != null) ''
+          # Run onChange hooks for deployed files.
+          _onchange="${onChangeDir}/$(id -un)"
+          if [ -x "$_onchange" ]; then
+            "$_onchange"
+          fi
+        ''}
       '';
     };
 

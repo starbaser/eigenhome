@@ -23,6 +23,8 @@
     source = entry.source;
     executable = entry.executable == true;
     clobber = entry.force;
+    recursive = entry.recursive or false;
+    onChange = entry.onChange or "";
   };
 
   # For home.file: use entry.target as key (relative to $HOME), since HM modules

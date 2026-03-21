@@ -105,9 +105,18 @@
           type = lib.types.bool;
           default = false;
           description = ''
-            When true and source is a directory available at eval time,
-            each file within is symlinked individually rather than
-            symlinking the directory itself.
+            When true and source is a directory, each file within is
+            symlinked individually rather than symlinking the directory
+            itself. Expansion happens at build time.
+          '';
+        };
+
+        onChange = lib.mkOption {
+          type = lib.types.lines;
+          default = "";
+          description = ''
+            Shell commands to run after the file has been linked.
+            Runs on each activation when set.
           '';
         };
 
