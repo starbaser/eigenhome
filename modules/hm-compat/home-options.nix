@@ -87,7 +87,7 @@ in {
     activation = mkOption {
       type = hmExtLib.hm.types.dagOf types.str;
       default = {};
-      description = "DAG of activation scripts, executed after hjem links files.";
+      description = "DAG of activation scripts, executed after eigenhome links files.";
     };
 
     # Global shell integration toggles
@@ -137,23 +137,23 @@ in {
       description = "Profile path (aliases profileDirectory for HM compat).";
     };
 
-    # Build/profile hooks — sinks (hjem doesn't build an HM-style profile).
+    # Build/profile hooks — sinks (eigenhome doesn't build an HM-style profile).
     extraActivationPath = mkOption {
       type = types.listOf types.package;
       default = [];
-      description = "Extra packages in activation PATH (accepted, not used by hjem).";
+      description = "Extra packages in activation PATH (accepted, not used by eigenhome).";
     };
 
     extraBuilderCommands = mkOption {
       type = types.lines;
       default = "";
-      description = "Extra builder commands (accepted, not used by hjem).";
+      description = "Extra builder commands (accepted, not used by eigenhome).";
     };
 
     extraProfileCommands = mkOption {
       type = types.lines;
       default = "";
-      description = "Extra profile build commands (accepted, not used by hjem).";
+      description = "Extra profile build commands (accepted, not used by eigenhome).";
     };
 
     extraOutputsToInstall = mkOption {
@@ -165,13 +165,13 @@ in {
     extraDependencies = mkOption {
       type = types.listOf types.anything;
       default = [];
-      description = "Extra closure dependencies (accepted, not used by hjem).";
+      description = "Extra closure dependencies (accepted, not used by eigenhome).";
     };
 
     checks = mkOption {
       type = types.listOf types.package;
       default = [];
-      description = "Build-time checks (accepted, not used by hjem).";
+      description = "Build-time checks (accepted, not used by eigenhome).";
     };
 
     # Locale settings — translated to session variables by translation.nix.
@@ -197,13 +197,13 @@ in {
     emptyActivationPath = mkOption {
       type = types.bool;
       default = true;
-      description = "Clear PATH before activation (accepted, not used by hjem).";
+      description = "Clear PATH before activation (accepted, not used by eigenhome).";
     };
 
     enableNixpkgsReleaseCheck = mkOption {
       type = types.bool;
       default = true;
-      description = "Nixpkgs release check (accepted, not used by hjem).";
+      description = "Nixpkgs release check (accepted, not used by eigenhome).";
     };
   };
 }

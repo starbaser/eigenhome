@@ -1,8 +1,8 @@
 # Activation DAG runner: generates a topo-sorted bash script from home.activation
-# entries and writes it as a file managed by hjem's linker.
+# entries and writes it as a file managed by eigenhome's linker.
 #
 # HM's built-in lifecycle phases (writeBoundary, installPackages, etc.) are
-# filtered out since hjem handles file linking and package installation natively.
+# filtered out since eigenhome handles file linking and package installation natively.
 # The remaining entries (dconf, gpg, font-cache, user-defined) are assembled
 # into an executable script at ~/.local/share/eigenhome/activate.
 {
@@ -19,7 +19,7 @@
     mkIf
     ;
 
-  # HM built-in activation phases that conflict with hjem's linker or are
+  # HM built-in activation phases that conflict with eigenhome's linker or are
   # irrelevant outside HM's generation model.
   filteredPhases = lib.genAttrs [
     "writeBoundary"

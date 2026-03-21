@@ -87,12 +87,12 @@
 in {
   config.warnings =
     (optional (recursiveFiles != []) ''
-      eigenhome: The following files use 'recursive = true', which is not supported by hjem.
+      eigenhome: The following files use 'recursive = true', which is not supported by eigenhome.
       Directories will be symlinked as a whole instead of per-leaf.
       Affected: ${lib.concatStringsSep ", " recursiveFiles}
     '')
     ++ (optional (onChangeFiles != []) ''
-      eigenhome: The following files use 'onChange', which is not supported by hjem.
+      eigenhome: The following files use 'onChange', which is not supported by eigenhome.
       Post-change hooks will not be executed.
       Affected: ${lib.concatStringsSep ", " onChangeFiles}
     '')

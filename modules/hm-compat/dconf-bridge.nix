@@ -5,7 +5,7 @@
 # and creates a systemd user service that loads them via `dconf load /`.
 #
 # The option is declared in cross-module-stubs.nix — this module is config-only.
-# The systemd service feeds into systemd-bridge.nix for hjem translation.
+# The systemd service feeds into systemd-bridge.nix for eigenhome translation.
 {
   config,
   lib,

@@ -1,12 +1,12 @@
 # Systemd bridge: translates HM's systemd.user.* INI-section options into
-# hjem's systemd.units entries.
+# eigenhome's systemd.units entries.
 #
 # HM modules write INI-section style:   { Unit.Description = "..."; Service.ExecStart = "..."; }
-# Hjem's systemd.nix uses NixOS types:  { description = "..."; serviceConfig.ExecStart = "..."; }
+# eigenhome's systemd.nix uses NixOS types:  { description = "..."; serviceConfig.ExecStart = "..."; }
 #
 # Rather than converting between these incompatible schemas, the bridge generates INI
-# text directly and inject into hjem's internal systemd.units option — the
-# same data store that hjem's own unit generation feeds into.
+# text directly and inject into eigenhome's internal systemd.units option — the
+# same data store that eigenhome's own unit generation feeds into.
 {
   config,
   lib,

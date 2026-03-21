@@ -1,6 +1,6 @@
-# Translation layer: HM options → hjem primitives.
+# Translation layer: HM options → eigenhome primitives.
 # Maps home.file → files, xdg.configFile → xdg.config.files, etc.
-# Derives read-only HM values (home.username, xdg.configHome) from hjem config.
+# Derives read-only HM values (home.username, xdg.configHome) from eigenhome config.
 {
   config,
   hmExtLib,
@@ -39,7 +39,7 @@
     );
 
   # For xdg.*File: use the original attr key (already relative to the XDG dir).
-  # entry.target is relative to $HOME (e.g. ".config/foo"), but hjem's
+  # entry.target is relative to $HOME (e.g. ".config/foo"), but eigenhome's
   # xdg.config.files expects keys relative to the XDG dir (e.g. "foo").
   translateXdgFileSet = fileSet:
     listToAttrs (

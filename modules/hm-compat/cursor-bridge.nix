@@ -1,4 +1,4 @@
-# Cursor bridge: translates HM's home.pointerCursor into hjem cursor artifacts.
+# Cursor bridge: translates HM's home.pointerCursor into eigenhome cursor artifacts.
 #
 # HM modules (Stylix cursor.nix, etc.) set config.home.pointerCursor with
 # { name, package, size, x11.enable, gtk.enable }. This bridge generates

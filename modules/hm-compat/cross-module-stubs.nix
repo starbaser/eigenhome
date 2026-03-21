@@ -50,11 +50,11 @@ in {
         freeformType = types.attrsOf types.anything;
       });
       default = null;
-      description = "Cursor theme configuration (translated to hjem cursor files).";
+      description = "Cursor theme configuration (translated to eigenhome cursor files).";
     };
 
     # nixpkgs — HM/Stylix modules set nixpkgs.overlays in their module context.
-    # Accepted as a sink; overlays are applied at the NixOS layer, not hjem.
+    # Accepted as a sink; overlays are applied at the NixOS layer, not eigenhome.
     nixpkgs = mkOption {
       type = types.attrsOf types.anything;
       default = {};
