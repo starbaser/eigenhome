@@ -1,81 +1,53 @@
 # `eigenhome` - `$HOME` is the eigenvector.
 
-Declarative home directory management for NixOS. `eigenhome` unifies the vast catalog of 1000+ [Home Manager](https://github.com/nix-community/home-manager) modules with the streamlined interface of [hjem](https://github.com/feel-co/hjem). One config, no transformation.
+Declarative home directory management for NixOS. `eigenhome` unifies the vast catalog of 1000+ [Home Manager](https://github.com/nix-community/home-manager) modules with the refined, streamlined interface of [hjem](https://github.com/feel-co/hjem). One config, no transformation.
 
 ## Installation
 
-Add eigenhome to your NixOS flake:
+Replace your `home-manager` or `hjem` flake input with `eigenhome`:
 
-```nix
-{
+```diff
+ # ~/.config/nixos/flake.nix
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    eigenhome.url = "github:starbaser/eigenhome";
+-   hjem.url = "github:feel-co/hjem";
+-   home-manager.url = "github:nix-community/home-manager";
+-   home-manager.inputs.nixpkgs.follows = "nixpkgs";
++   eigenhome.url = "github:starbaser/eigenhome";
   };
-
-  outputs = { nixpkgs, eigenhome, ... }: {
-    nixosConfigurations.my-machine = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      modules = [
-        eigenhome.nixosModules.default
-
-        ({ pkgs, ... }: {
-          eigenhome.users.alice = {
-            enable = true;
-            files.".config/hello.txt".text = "Hello, eigenhome.";
-            packages = [ pkgs.htop pkgs.ripgrep ];
-          };
-        })
-      ];
-    };
-  };
-}
 ```
 
-### Flake Outputs
+Then:
+1. Replace your module import with `eigenhome.nixosModules.default`
+2. **From hjem:** add `eigenhome.nixosModules.hjem-compat` to keep the `hjem.*` namespace, or find-and-replace `hjem.` → `eigenhome.`. If you use `generator`/`value`, see [here](#hjem-migration)
+3. **From Home Manager:** replace `home-manager.users.<name>` with `eigenhome.users.<name>` and add `eigenhome.homeModules.hm-compat` to your user imports
 
-| Output | Purpose |
-|--------|---------|
-| `nixosModules.default` | Core eigenhome + activation (recommended) |
-| `nixosModules.eigenhome` | Core module only |
-| `nixosModules.hjem-lib` | Lib shim so rum modules resolve `hjem-lib` to eigenhome |
-| `nixosModules.activation` | Activation service standalone |
-| `nixosModules.hjem-compat` | Hjem namespace aliases (`hjem.*` → `eigenhome.*`) |
-| `homeModules.hm-compat` | Home Manager compatibility layer |
-| `homeModules.default` | Same as `hm-compat` |
-| `nixOnDroidModules.default` | Nix-on-Droid support |
-| `packages.<system>.smfh` | The smfh file linker |
+That should be it. If your config doesn't evaluate cleanly after these steps, [open an issue](https://github.com/starbaser/eigenhome/issues) — it's a bug and I'll fix it.
 
 ## Quick Start
 
-### Deploy files
+Your home, your way. Choose [`hjem`-style](https://github.com/feel-co/hjem#implementation) for the dining room and keep Home Manager in the backyard.
 
 ```nix
 eigenhome.users.alice = {
   enable = true;
 
-  # Inline text
   files.".config/app/config.toml".text = ''
     [settings]
     theme = "dark"
   '';
 
-  # From a source path
   files.".local/bin/myscript" = {
     source = ./scripts/myscript.sh;
     executable = true;
   };
 
-  # Recursive directory expansion
   files.".config/nvim" = {
     source = ./nvim;
     recursive = true;
   };
 
-  # User packages
   packages = [ pkgs.git pkgs.htop ];
 
-  # Environment variables
   environment.sessionVariables = {
     EDITOR = "nvim";
     PAGER = "less";
@@ -96,64 +68,140 @@ eigenhome.users.alice = {
 };
 ```
 
-Changing `xdg.config.directory` (and the others) automatically exports the corresponding `XDG_*_HOME` variable.
-
-## Home Manager Compatibility
-
-eigenhome can evaluate standard Home Manager modules without Home Manager itself. Import the compatibility layer into user configs:
+## Usage
 
 ```nix
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     eigenhome.url = "github:starbaser/eigenhome";
+
+    # Your home manager inputs stay unchanged.
+
+    firefox-config = {
+      url = "github:starbaser/firefox-config"; # My custom firefox-nightly flake
+      inputs.eigenhome.follows = "eigenhome";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { nixpkgs, eigenhome, ... }: {
+  outputs = { nixpkgs, eigenhome, firefox-config, ... }: {
     nixosConfigurations.my-machine = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
         eigenhome.nixosModules.default
 
-        {
+        ({ pkgs, ... }: {
+          # Load HM compat for all users
+          eigenhome.extraModules = [ eigenhome.homeModules.hm-compat ];
+
           eigenhome.users.alice = {
             enable = true;
-            imports = [ eigenhome.homeModules.hm-compat ];
+            imports = [
+              firefox-config.homeModules.firefox  # programs.firefox.*
+            ];
 
+            # Native hjem — deploy files directly
+            files.".local/bin/rebuild" = {
+              source = ./scripts/rebuild.sh;
+              executable = true;
+            };
+            xdg.config.files."gtk-3.0/settings.ini".text = ''
+              [Settings]
+              gtk-theme-name=adw-gtk3-dark
+              gtk-icon-theme-name=Papirus-Dark
+            '';
+            xdg.config.files."mimeapps.list".text = ''
+              [Default Applications]
+              text/html=firefox.desktop
+              x-scheme-handler/https=firefox.desktop
+            '';
+            xdg.data.files."applications/open-terminal.desktop".text = ''
+              [Desktop Entry]
+              Name=Terminal
+              Exec=kitty
+              Type=Application
+            '';
+
+            # Home Manager programs
             programs.git = {
               enable = true;
               userName = "Alice";
               userEmail = "alice@example.com";
               aliases = { co = "checkout"; st = "status"; };
-              ignores = [ "*.swp" ".direnv" ];
+              ignores = [ "*.swp" ".direnv" "result" ];
+              extraConfig.init.defaultBranch = "main";
             };
-
             programs.starship.enable = true;
-            programs.direnv.enable = true;
+            programs.direnv = {
+              enable = true;
+              nix-direnv.enable = true;
+            };
+            programs.bat = {
+              enable = true;
+              config.theme = "OneHalfDark";
+            };
+            programs.fzf.enable = true;
+            programs.zoxide.enable = true;
+
+            # Packages and environment
+            packages = with pkgs; [ htop ripgrep fd eza ];
+            environment.sessionVariables = {
+              EDITOR = "nvim";
+              PAGER = "bat --plain";
+            };
           };
-        }
+        })
       ];
     };
   };
 }
 ```
 
-To load the compatibility layer for **all** users, use `extraModules`:
+### `hm-compat`
+
+The substrate of `eigenhome` is the `hm-compat` compatibility layer — it wraps Home Manager's upstream modules and evaluates them within a perfectly replicated `hjem` module system. Load it globally with `extraModules` (as above), or per-user via `imports`:
 
 ```nix
-eigenhome.extraModules = [ eigenhome.homeModules.hm-compat ];
+eigenhome.users.alice = {
+  enable = true;
+  imports = [ eigenhome.homeModules.hm-compat ];
+};
+```
+
+#### Custom Home Manager Module Compatibility
+
+The compatibility layer includes a curated set of HM program modules. To use an HM module not in that set, wrap it manually with `wrapHmModule`, which is available as a module argument when `hm-compat` is imported:
+
+```nix
+eigenhome.users.alice = {
+  enable = true;
+  imports = [
+    eigenhome.homeModules.hm-compat
+
+    # Wrap an HM module by source path
+    ({ wrapHmModule, hmSrc, ... }: {
+      imports = [ (wrapHmModule "${hmSrc}/modules/programs/taskwarrior.nix") ];
+    })
+
+    # Wrap a flake's homeModule output
+    ({ wrapHmModule, ... }: {
+      imports = [ (wrapHmModule inputs.stylix.homeModules.stylix) ];
+    })
+  ];
+};
 ```
 
 ### Mixing native and HM options
 
-Native eigenhome options and HM-translated options coexist in the same user block:
+Native hjem options and HM-translated options coexist in the same user block:
 
 ```nix
 eigenhome.users.alice = {
   enable = true;
   imports = [ eigenhome.homeModules.hm-compat ];
 
-  # Native eigenhome
+  # Native hjem
   files.".local/bin/backup" = {
     source = ./scripts/backup.sh;
     executable = true;
@@ -173,20 +221,52 @@ eigenhome.users.alice = {
 };
 ```
 
-### Supported HM programs
+### How `wrapHmModule` works
 
-The compatibility layer supports upstream HM modules for these `programs.*` options:
+Importing `hm-compat` is all you need — the supported `programs.*` options work immediately with no additional setup. The rest of this section explains the mechanism for anyone who wants to understand how, or who needs to wrap additional HM modules manually.
 
-**Shells:** bash, fish, ion, nushell, zsh
-**Version control:** delta, diff-highlight, diff-so-fancy, difftastic, git, gitui, gpg, jjui, lazygit, patdiff, riff
-**Browsers:** chromium, firefox, floorp, librewolf, qutebrowser, zen-browser
-**Editors:** emacs, helix, micro, neovide, neovim, nixvim, nvf, opencode, vim, vscode, zed-editor
-**Terminals:** alacritty, foot, ghostty, kitty, rio, tmux, wezterm, zellij
-**Launchers:** bemenu, fuzzel, rofi, tofi, wofi
-**Desktop:** dconf, hyprland, hyprlock, hyprpanel, i3bar-river, regreet, swaylock, waybar, wayprompt
-**CLI:** bat, broot, btop, fzf, k9s, kubecolor, mangohud, starship, vivid, yazi
-**Media:** cava, cavalier, mpv, ncspot, nixcord, sioyek, spicetify, spotify-player, vesktop
-**Other:** anki, ashell, dank-material-shell, direnv, foliate, halloy, noctalia-shell, obsidian, vicinae, zathura
+Home Manager modules expect `lib.hm.*` helpers (e.g., `lib.hm.dag.entryAfter`, `lib.hm.shell.mkBashIntegrationOption`). The NixOS module system hardwires `lib` at evaluation time — `_module.args` cannot override it. `wrapHmModule` solves this by intercepting module function calls and injecting an extended `lib` that includes `lib.hm`:
+
+```nix
+# wrap-hm-module.nix — simplified
+wrapImport = mod:
+  if isPath mod then
+    args: wrapImport ((import mod) (args // { lib = hmExtLib; }))
+  else if isFunction mod then
+    args: wrapImport (mod (args // { lib = hmExtLib; }))
+  else if isAttrs mod && mod ? imports then
+    mod // { imports = map wrapImport mod.imports; }
+  else
+    mod;
+```
+
+The wrapper is recursive: multi-file HM modules (like firefox) use `imports` to pull in sub-modules, and each sub-module also receives the extended `lib`. Path inputs produce stable `key` attributes for deduplication, so importing the same HM module from multiple sources doesn't cause conflicts.
+
+The compatibility layer ([`programs-stubs.nix`](modules/hm-compat/programs-stubs.nix)) maintains a curated list of programs and resolves each to its upstream HM module path. Programs with upstream modules are bulk-imported via `wrapHmModule`; programs without one (nixcord, nixvim, spicetify, etc.) receive freeform submodule stubs instead, so meta-modules like Stylix can write to `programs.X.*` without errors.
+
+Shell integrations ([`shell-stubs.nix`](modules/hm-compat/shell-stubs.nix)) and VCS diff tools ([`cross-module-stubs.nix`](modules/hm-compat/cross-module-stubs.nix)) are handled separately with typed option declarations, since they require cross-module coordination (e.g., routing starship's init snippet into rum's shell config).
+
+#### Supported `programs.*`
+
+Programs with upstream HM modules are imported via `wrapHmModule`. Programs declared with typed options elsewhere are marked with their source.
+
+| Category | Programs |
+|----------|----------|
+| **Shells** | bash\*, fish\*, ion\*, nushell\*, zsh\* |
+| **Version control** | git, gitui, jjui, lazygit, gpg\*\*, delta\*\*, diff-highlight\*\*, diff-so-fancy\*\*, difftastic\*\*, patdiff\*\*, riff\*\* |
+| **Browsers** | chromium, floorp, librewolf, qutebrowser, zen-browser, firefox\*\*\* |
+| **Editors** | emacs, helix, micro, neovide, neovim, nixvim†, nvf†, opencode, vim, vscode, zed-editor |
+| **Terminals** | alacritty, foot, ghostty, kitty, rio, tmux, wezterm, zellij |
+| **Launchers** | bemenu, fuzzel, rofi, tofi, wofi |
+| **Desktop** | dconf, hyprland, hyprlock, hyprpanel, i3bar-river, regreet, swaylock, waybar, wayprompt |
+| **CLI** | bat, broot, btop, direnv, fzf, k9s, kubecolor, mangohud, starship, vivid, yazi |
+| **Media** | cava, cavalier, mpv, ncspot, nixcord†, sioyek, spicetify†, spotify-player, vesktop |
+| **Other** | anki, ashell, dank-material-shell, foliate, halloy, noctalia-shell, obsidian, vicinae, zathura |
+
+\* `shell-stubs.nix` — typed options with rum shell integration
+\*\* `cross-module-stubs.nix` — typed options for cross-module VCS pager wiring
+\*\*\* Provided by external flake (e.g., [`firefox-config`](https://github.com/starbaser/firefox-config))
+† Freeform stub (no upstream HM module)
 
 Additional HM options supported: `home.file`, `home.packages`, `home.sessionVariables`, `home.activation`, `xdg.configFile`, `xdg.dataFile`, `systemd.user.services`, `systemd.user.timers`.
 
@@ -259,7 +339,7 @@ When rum's shell modules are active, HM shell integrations (like starship's init
 | `xdg.cache.files.<path>.*` | file entry | — | Files deployed to `$XDG_CACHE_HOME` |
 | `xdg.state.files.<path>.*` | file entry | — | Files deployed to `$XDG_STATE_HOME` |
 | `packages` | `listOf package` | `[]` | Packages added to the user's profile |
-| `environment.sessionVariables` | `attrsOf str` | `{}` | Environment variables exported at session start |
+| `environment.sessionVariables` | `attrsOf (null \| int \| str \| path \| listOf ...)` | `{}` | Environment variables exported at session start |
 | `clobberFiles` | `bool` | inherited | Per-user clobber override (inherits from `clobberByDefault`) |
 
 ### File entry options

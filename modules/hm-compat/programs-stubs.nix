@@ -53,6 +53,7 @@
     "chromium"
     "dank-material-shell"
     "dconf"
+    "direnv"
     "emacs"
     "floorp"
     "foliate"
