@@ -4,6 +4,9 @@ Declarative home directory management for NixOS. `eigenhome` unifies the vast ca
 
 ## Installation
 
+> [!IMPORTANT]
+> Use at your own risk, and beware of bugs, issues, and missing features. If you do not feel like being a beta tester, wait until Hjem is more finished. I
+
 Replace your `home-manager` or `hjem` flake input with `eigenhome`:
 
 ```diff
@@ -19,9 +22,52 @@ Replace your `home-manager` or `hjem` flake input with `eigenhome`:
 Then:
 1. Replace your module import with `eigenhome.nixosModules.default`
 2. **From hjem:** add `eigenhome.nixosModules.hjem-compat` to keep the `hjem.*` namespace, or find-and-replace `hjem.` → `eigenhome.`. If you use `generator`/`value`, see [here](#hjem-migration)
-3. **From Home Manager:** replace `home-manager.users.<name>` with `eigenhome.users.<name>` and add `eigenhome.homeModules.hm-compat` to your user imports
+3. **From Home Manager:** replace `home-manager.users.<name>` with `eigenhome.users.<name>` and add `eigenhome.homeModules.hm-compat` to your user imports.
 
-That should be it. If your config doesn't evaluate cleanly after these steps, [open an issue](https://github.com/starbaser/eigenhome/issues) — it's a bug and I'll fix it.
+4. Build and verify your configuration evaluates:
+
+```bash
+# Update the lock file with the new input
+nix flake lock --update-input eigenhome
+
+# Dry-run build — evaluates the config without activating anything
+nixos-rebuild build --flake ~/.config/nixos
+```
+
+Before continuing, please carefully read the following:
+
+> [!CAUTION]
+> The linker that `eigenhome`/`hjem` uses (smfh) replaces managed file paths with symlinks to the nix store. If you have non-symlinked files at those paths, they will be overwritten. The `build` step is safe — only `switch` modifies your home directory. Back up first if unsure.
+> To see exactly which files will be managed, inspect the manifest after `build`:
+> ```bash
+> # Find the manifest store path from the built service unit
+> grep -oP '/nix/store/[^"]+eigenhome-manifests' \
+>   result/etc/systemd/system/eigenhome-activate@.service | head -1
+>
+> # List every target path smfh will manage
+> jq -r '.files[].target' /nix/store/<hash>-eigenhome-manifests/manifest-<username>.json
+> ```
+>
+> To back up files before they are replaced with symlinks:
+> ```bash
+> MANIFEST=$(grep -oP '/nix/store/[^"]+eigenhome-manifests' \
+>   result/etc/systemd/system/eigenhome-activate@.service | head -1)
+> mkdir -p ~/eigenhome-backup
+> jq -r '.files[].target' "$MANIFEST"/manifest-*.json \
+>   | while read -r f; do [ -e "$f" ] && cp --parents "$f" ~/eigenhome-backup/; done
+> ```
+> If you're extra cautious — snapshot all of `~/.config` with permissions intact:
+> ```bash
+> tar czpf ~/config-backup-$(date +%Y%m%d).tar.gz -C ~ .config
+> ```
+
+
+**Switch when ready:**
+```bash
+sudo nixos-rebuild switch --flake ~/.config/nixos
+```
+
+If your config doesn't evaluate cleanly after these steps, [open an issue](https://github.com/starbaser/eigenhome/issues) — it's a bug and I'll fix it along with your config.
 
 ## Quick Start
 
@@ -386,7 +432,33 @@ modules = [
 
 This maps `hjem.users`, `hjem.clobberByDefault`, etc. to their `eigenhome.*` equivalents via `mkRenamedOptionModule`, so existing hjem configs work without changes.
 
-> eigenhome removes hjem's `generator`/`value` indirection. If your hjem config used `generator = lib.generators.toJSON {}; value = { ... };`, rewrite to `source = (pkgs.formats.json {}).generate "name" data;` or `text = builtins.toJSON data;`.
+eigenhome removes hjem's `generator`/`value` indirection. If you use it, the rewrite is mechanical:
+
+```nix
+# hjem — generator/value dispatches to source or text automatically
+xdg.config.files."foo/settings.json" = {
+  generator = lib.generators.toJSON { };
+  value = {
+    theme = "dark";
+    fontSize = 14;
+  };
+};
+
+# eigenhome — assign source or text directly
+xdg.config.files."foo/settings.json".source =
+  (pkgs.formats.json { }).generate "settings.json" {
+    theme = "dark";
+    fontSize = 14;
+  };
+
+# or, if you just need a string (no store path):
+xdg.config.files."foo/settings.json".text = builtins.toJSON {
+  theme = "dark";
+  fontSize = 14;
+};
+```
+
+The same pattern applies to other formats: `lib.generators.toTOML {}` → `text = lib.generators.toTOML {} data;`, `lib.generators.toINI {}` → `text = lib.generators.toINI {} data;`.
 
 ## Testing
 
@@ -394,10 +466,3 @@ This maps `hjem.users`, `hjem.clobberByDefault`, etc. to their `eigenhome.*` equ
 nix flake check                                    # all 14 tests
 nix build .#checks.x86_64-linux.basic              # single test
 ```
-
-**Core tests:** `basic`, `linker`, `xdg`, `xdg-linker`, `special-args`, `no-users-linker`
-**HM-compat tests:** `starship`, `starship-rum`, `git`, `direnv`, `firefox`, `yazi`, `activation`, `systemd-bridge`
-
-## License
-
-MIT
