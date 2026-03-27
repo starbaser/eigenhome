@@ -5,7 +5,7 @@ Declarative home directory management for NixOS. `eigenhome` unifies the vast ca
 ## Installation
 
 > [!IMPORTANT]
-> Use at your own risk, and beware of bugs, issues, and missing features. If you do not feel like being a beta tester, wait until Hjem is more finished. I
+> Use at your own risk, and beware of bugs, issues, and missing features. If you do not feel like being a beta tester, wait until `eigenhome` is more finished.
 
 Replace your `home-manager` or `hjem` flake input with `eigenhome`:
 
