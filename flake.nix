@@ -46,6 +46,7 @@
           ./nixos/activation.nix
         ];
       };
+      hjem-compat = ./modules/nixos/hjem-compat.nix;
     };
 
     homeModules = {

@@ -19,10 +19,23 @@ in {
   options.xdg = {
     enable = lib.mkEnableOption "XDG base directory specification";
 
-    mimeApps = mkOption {
-      type = types.submodule {freeformType = types.attrsOf types.anything;};
-      default = {};
-      description = "MIME type associations (accepted for compat).";
+    mimeApps = {
+      enable = lib.mkEnableOption "MIME type associations" // {default = true;};
+      defaultApplications = mkOption {
+        type = types.attrsOf (types.either types.str (types.listOf types.str));
+        default = {};
+        description = "Default application for each MIME type.";
+      };
+      addedAssociations = mkOption {
+        type = types.attrsOf (types.either types.str (types.listOf types.str));
+        default = {};
+        description = "Added MIME type associations.";
+      };
+      removedAssociations = mkOption {
+        type = types.attrsOf (types.either types.str (types.listOf types.str));
+        default = {};
+        description = "Removed MIME type associations.";
+      };
     };
 
     systemDirs = mkOption {

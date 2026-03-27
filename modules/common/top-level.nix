@@ -11,7 +11,7 @@
   inherit (lib.attrsets) filterAttrs mapAttrsToList;
   inherit (lib.lists) optional;
   inherit (lib.options) literalExpression mkOption mkPackageOption;
-  inherit (lib.types) attrs attrsWith either listOf raw singleLineStr;
+  inherit (lib.types) attrs attrsWith bool either listOf raw singleLineStr;
 
   cfg = config.eigenhome;
 
@@ -83,6 +83,16 @@ in {
         serialized to JSON and passed as `--linker-opts options.json`.
       '';
       type = either (listOf singleLineStr) attrs;
+    };
+
+    clobberByDefault = mkOption {
+      type = bool;
+      default = false;
+      example = true;
+      description = ''
+        The default clobber behaviour for all users. Individual users can
+        override this with {option}`eigenhome.users.<username>.clobberFiles`.
+      '';
     };
   };
 

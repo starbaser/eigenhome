@@ -102,6 +102,7 @@ with open(sys.argv[1], "w") as f:
       cfg.specialArgs
       // {
         inherit hjem-lib osConfig pkgs utils;
+        clobberByDefault = cfg.clobberByDefault;
         nixosConfig = osConfig;
         darwinConfig = null;
         osOptions = options;

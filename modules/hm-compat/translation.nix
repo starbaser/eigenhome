@@ -84,6 +84,15 @@ in {
     xdg.state.files =
       mkIf (hasFiles config.xdg.stateFile) (translateXdgFileSet config.xdg.stateFile);
 
+    xdg.mime-apps = let
+      ma = config.xdg.mimeApps;
+    in
+      mkIf ma.enable {
+        default-applications = ma.defaultApplications;
+        added-associations = ma.addedAssociations;
+        removed-associations = ma.removedAssociations;
+      };
+
     packages = config.home.packages;
 
     environment.sessionVariables = mkMerge [

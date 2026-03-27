@@ -84,6 +84,12 @@ in {
       overlapping keys: ${lib.concatStringsSep ", " overlappingVars}.
       Both will be applied; home.sessionVariables takes precedence at shell level.
     '')
+    ++ (optional (config.xdg.desktopEntries != {})
+      "eigenhome: xdg.desktopEntries is not supported and will be ignored.")
+    ++ (optional (config.xdg.portal != {})
+      "eigenhome: xdg.portal is not supported (configure via NixOS options instead).")
+    ++ (optional (config.systemd.user.tmpfiles.rules != [])
+      "eigenhome: systemd.user.tmpfiles.rules is not supported and will be ignored.")
     ++ (map (name: ''
         eigenhome: Both rum.programs.${name} and programs.${name} (HM) are enabled.
         This may cause duplicate config files. Consider disabling one.

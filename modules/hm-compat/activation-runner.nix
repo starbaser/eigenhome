@@ -56,6 +56,7 @@
     _iWarn() { local fmt="$1"; shift; printf "warning: $fmt\n" "$@" >&2; }
     _iError() { local fmt="$1"; shift; printf "error: $fmt\n" "$@" >&2; }
     verboseEcho() { :; }
+    note() { _iNote "$@"; }
 
     run() {
       if [[ "$1" == "--silence" ]]; then
@@ -75,6 +76,7 @@
     export oldGenPath=""
     export genProfilePath=""
     export DRY_RUN_CMD=""
+    export DRY_RUN=""
     export DRY_RUN_NULL=/dev/null
     export VERBOSE_ECHO=verboseEcho
     export VERBOSE_ARG=""

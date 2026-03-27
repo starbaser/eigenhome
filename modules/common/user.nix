@@ -4,6 +4,7 @@
 # be avoided here.
 {
   config,
+  clobberByDefault ? false,
   hjem-lib,
   lib,
   name,
@@ -79,7 +80,7 @@ in {
 
     clobberFiles = mkOption {
       type = bool;
-      default = false;
+      default = clobberByDefault;
       example = true;
       description = ''
         The default override behaviour for files managed by eigenhome for a
