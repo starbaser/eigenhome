@@ -43,17 +43,23 @@
     ]);
 
   userOnChangeScripts = mapAttrs (username: user: let
-    files = filter (f: f.enable && f.onChange != "") (allUserFiles user);
+    files = filter (f: f.enable && f.onChange != "" && f.source != null) (allUserFiles user);
   in
     if files == []
     then null
     else
-      pkgs.writeShellScript "eigenhome-onchange-${username}" (
-        concatStringsSep "\n" (map (f: ''
+      pkgs.writeShellScript "eigenhome-onchange-${username}" ''
+        _manifest="/var/lib/eigenhome/manifest-$(id -un).json"
+        ${concatStringsSep "\n" (map (f: ''
           # onChange: ${f.target}
-          ${f.onChange}
-        '') files)
-      ))
+          _old_src="$(${pkgs.jq}/bin/jq -r --arg t ${lib.escapeShellArg f.target} \
+            '.files[] | select(.target == $t) | .source // empty' \
+            "$_manifest" 2>/dev/null || true)"
+          if [ -z "$_old_src" ] || [ "$_old_src" != ${lib.escapeShellArg (toString f.source)} ]; then
+            ${f.onChange}
+          fi
+        '') files)}
+      '')
     enabledUsers;
 
   onChangeDir = let
