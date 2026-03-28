@@ -50,6 +50,14 @@ in {
       description = "Extra directories to prepend to PATH.";
     };
 
+    # Extra shell snippet appended verbatim to the session env script.
+    # Used by gpg-agent.nix to inject SSH_AUTH_SOCK when enableSshSupport = true.
+    sessionVariablesExtra = mkOption {
+      type = types.lines;
+      default = "";
+      description = "Extra shell commands appended to the session variables script (accepted, not used by eigenhome).";
+    };
+
     username = mkOption {
       type = types.str;
       readOnly = true;

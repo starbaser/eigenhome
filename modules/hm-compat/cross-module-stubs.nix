@@ -120,15 +120,6 @@ in {
       description = "Stub for HM wayland.windowManager.* namespace.";
     };
 
-    # HM services namespace — daemon config like services.lspdna.enable.
-    # Distinct from systemd.user.services (declared in systemd-bridge.nix).
-    # Uses submodule so wrapped HM modules can extend with typed sub-options.
-    services = mkOption {
-      type = types.submodule {freeformType = types.attrsOf types.anything;};
-      default = {};
-      description = "Stub for HM services.* namespace (not bridged).";
-    };
-
     # dbus — ghostty and other modules set dbus.packages.
     dbus = mkOption {
       type = types.attrsOf types.anything;

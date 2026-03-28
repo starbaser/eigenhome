@@ -18,6 +18,10 @@
 # unifyModuleSyntax reads for dedup. If the same HM module is imported by
 # both the compat layer and user config, the module system sees the same
 # key and processes it only once.
+#
+# Some HM modules (e.g., services/podman/linux/default.nix) are plain attrsets
+# rather than functions — they don't take args. When `import mod` returns an
+# attrset, we wrap it directly (recursing into imports) rather than calling it.
 {hmExtLib}: let
   wrapImport = mod:
     if builtins.isPath mod || builtins.isString mod then
@@ -25,13 +29,18 @@
         key = "hm-compat:${toString mod}";
         imported = import mod;
       in
-        args: let
-          result = wrapImport (imported (args // {lib = hmExtLib;}));
-        in
-          if builtins.isAttrs result then
-            result // {inherit key;}
-          else
-            result
+        if builtins.isFunction imported then
+          args: let
+            result = wrapImport (imported (args // {lib = hmExtLib;}));
+          in
+            if builtins.isAttrs result then
+              result // {inherit key;}
+            else
+              result
+        else if builtins.isAttrs imported && imported ? imports then
+          (imported // {imports = map wrapImport imported.imports;}) // {inherit key;}
+        else
+          imported // {inherit key;}
     else if builtins.isFunction mod then
       args: wrapImport (mod (args // {lib = hmExtLib;}))
     else if builtins.isAttrs mod && mod ? imports then

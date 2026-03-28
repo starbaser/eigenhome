@@ -36,4 +36,5 @@ in {
   firefox = callTest ./firefox.nix {};
   yazi = callTest ./yazi.nix {};
   starship-rum = callTest ./starship-rum.nix {};
+  services-stub = callTest ./services-stub.nix {};
 }

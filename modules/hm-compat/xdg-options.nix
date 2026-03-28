@@ -36,6 +36,31 @@ in {
         default = {};
         description = "Removed MIME type associations.";
       };
+
+      # Deprecated sub-attribute form used by some HM service modules (e.g. remmina.nix).
+      associations = mkOption {
+        type = types.submodule {freeformType = types.attrsOf types.anything;};
+        default = {};
+        description = "Deprecated associations sub-namespace (accepted for compat).";
+      };
+    };
+
+    # XDG user dirs — service modules (mpd.nix) read enable and music.
+    # Freeform accepts all standard HM userDirs fields (desktop, downloads, etc.).
+    userDirs = mkOption {
+      type = types.submodule {
+        freeformType = types.attrsOf types.anything;
+        options = {
+          enable = lib.mkEnableOption "XDG user directory management";
+          music = mkOption {
+            type = types.str;
+            default = "\${HOME}/Music";
+            description = "XDG music directory path.";
+          };
+        };
+      };
+      default = {};
+      description = "XDG user directory config (accepted for compat).";
     };
 
     systemDirs = mkOption {
