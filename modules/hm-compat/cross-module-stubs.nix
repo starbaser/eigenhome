@@ -2,12 +2,20 @@
 # Without these, modules like git.nix crash when accessing config.accounts.email.*
 # or config.programs.gpg.package.
 {
+  config,
   lib,
   pkgs,
   ...
 }: let
   inherit (lib) mkOption types;
 in {
+  config = {
+    # HM email program modules (mbsync, msmtp, etc.) declare accounts.email.accounts
+    # without a default value. Provide an empty default so the option has a value
+    # when no email accounts are configured.
+    accounts.email.accounts = lib.mkDefault {};
+  };
+
   options = {
     # HM modules set meta.maintainers = []; — accept and discard.
     meta = mkOption {
@@ -16,15 +24,17 @@ in {
       description = "Module metadata (accepted for compatibility, not used).";
     };
 
-    # HM's accounts module — git.nix reads config.accounts.email.accounts unconditionally.
-    accounts.email.accounts = mkOption {
-      type = types.attrsOf types.anything;
-      default = {};
-      description = "Stub for HM accounts module compatibility.";
-    };
-
     # HM's gpg module — git.nix reads config.programs.gpg.package for signing defaults.
     programs.gpg.package = lib.mkPackageOption pkgs "gnupg" {};
+
+    programs.gpg.homedir = mkOption {
+      type = types.str;
+      default = "${config.home.homeDirectory}/.gnupg";
+      description = "GnuPG home directory path.";
+    };
+
+    programs.home-manager.enable = lib.mkEnableOption "home-manager";
+    programs.home-manager.package = lib.mkPackageOption pkgs "home-manager" {};
 
     # HM's git module reads config.programs.${name}.enable for external diff tools.
     # These would normally be defined by their own HM modules (delta.nix, etc.).
@@ -71,9 +81,9 @@ in {
 
     # xsession — X11 session config (accept and discard on Wayland).
     xsession = mkOption {
-      type = types.attrsOf types.anything;
+      type = types.submodule {freeformType = types.attrsOf types.anything;};
       default = {};
-      description = "X11 session config (accepted, not used on Wayland).";
+      description = "Stub for HM xsession.* namespace (not bridged on Wayland).";
     };
 
     # Fontconfig defaults — consumed by fontconfig-bridge.nix.
@@ -98,10 +108,16 @@ in {
     };
 
     # Wayland compositor options — safety net for disabled targets.
-    wayland = mkOption {
-      type = types.attrsOf types.anything;
+    wayland.systemd.target = mkOption {
+      type = types.str;
+      default = "graphical-session.target";
+      description = "Wayland systemd session target (compat stub for HM service modules).";
+    };
+
+    wayland.windowManager = mkOption {
+      type = types.submodule {freeformType = types.attrsOf types.anything;};
       default = {};
-      description = "Stub for HM wayland.* namespace (not bridged).";
+      description = "Stub for HM wayland.windowManager.* namespace.";
     };
 
     # HM services namespace — daemon config like services.lspdna.enable.

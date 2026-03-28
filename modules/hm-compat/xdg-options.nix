@@ -50,6 +50,12 @@ in {
       description = "XDG desktop portal config (accepted for compat).";
     };
 
+    autostart = mkOption {
+      type = types.submodule {freeformType = types.attrsOf types.anything;};
+      default = {};
+      description = "Stub for HM xdg.autostart compat.";
+    };
+
     desktopEntries = mkOption {
       type = types.attrsOf types.anything;
       default = {};

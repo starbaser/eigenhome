@@ -92,7 +92,9 @@
     || cfg.paths != {}
     || cfg.sockets != {}
     || cfg.targets != {}
-    || cfg.slices != {};
+    || cfg.slices != {}
+    || cfg.mounts != {}
+    || cfg.automounts != {};
 in {
   options.systemd.user = {
     enable =
@@ -137,6 +139,18 @@ in {
       description = "Definition of systemd per-user slice units.";
     };
 
+    mounts = mkOption {
+      type = types.attrsOf unitModule;
+      default = {};
+      description = "Definition of systemd per-user mount units.";
+    };
+
+    automounts = mkOption {
+      type = types.attrsOf unitModule;
+      default = {};
+      description = "Definition of systemd per-user automount units.";
+    };
+
     sessionVariables = mkOption {
       type = types.attrsOf (types.either types.int types.str);
       default = {};
@@ -175,6 +189,8 @@ in {
       (mkUnits "socket" cfg.sockets)
       (mkUnits "target" cfg.targets)
       (mkUnits "slice" cfg.slices)
+      (mkUnits "mount" cfg.mounts)
+      (mkUnits "automount" cfg.automounts)
     ]);
 
     environment.sessionVariables = mkIf (cfg.sessionVariables != {}) cfg.sessionVariables;

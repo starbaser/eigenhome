@@ -75,9 +75,10 @@ in {
       Entries: ${lib.concatStringsSep ", " (attrNames config.home.activation)}
     '')
     ++ (optional startServicesChanged ''
-      eigenhome: systemd.user.startServices is set but service switching is handled
-      by the NixOS eigenhome-activate@ service (daemon-reload only).
-      Live service restart/stop is not supported.
+      eigenhome: systemd.user.startServices is set to a non-default value.
+      Service lifecycle (start, stop, restart) is managed automatically by
+      eigenhome-user-activation@ when unit files change. The value of
+      startServices is accepted for compatibility but ignored.
     '')
     ++ (optional (overlappingVars != []) ''
       eigenhome: systemd.user.sessionVariables and home.sessionVariables define
