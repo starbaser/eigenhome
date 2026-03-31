@@ -5,7 +5,7 @@ Declarative home directory management for NixOS. `eigenhome` unifies the vast ca
 ## Installation
 
 > [!IMPORTANT]
-> Use at your own risk, and beware of bugs, issues, and missing features. If you do not feel like being a beta tester, wait until Hjem is more finished. I
+> Use at your own risk, and beware of bugs, issues, and missing features. If you do not feel like being a beta tester, wait until `eigenhome` is more finished.
 
 Replace your `home-manager` or `hjem` flake input with `eigenhome`:
 
@@ -37,7 +37,7 @@ nixos-rebuild build --flake ~/.config/nixos
 Before continuing, please carefully read the following:
 
 > [!CAUTION]
-> The linker that `eigenhome`/`hjem` uses (smfh) replaces managed file paths with symlinks to the nix store. If you have non-symlinked files at those paths, they will be overwritten. The `build` step is safe — only `switch` modifies your home directory. Back up first if unsure.
+> The linker that `eigenhome`/`hjem` uses (smfh) replaces managed file paths with symlinks to the nix store. If you have non-symlinked files at those paths, they will be overwritten. The `build` step is safe, only `switch` modifies your home directory. Back up first if unsure.
 > To see exactly which files will be managed, inspect the manifest after `build`:
 > ```bash
 > # Find the manifest store path from the built service unit
