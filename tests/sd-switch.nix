@@ -44,7 +44,7 @@ in
 
       specialisation = {
         changedService.configuration = {
-          eigenhome.users.${user}.systemd.user.services.test-daemon = {
+          eigenhome.users.${user}.systemd.user.services.test-daemon = pkgs.lib.mkForce {
             Unit.Description = "sd-switch test daemon (changed)";
             Service = {
               Type = "simple";

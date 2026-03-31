@@ -102,51 +102,26 @@ in {
           fi
         ''}
 
-        # Diff old vs new user service units and restart/stop/start as needed.
-        # New units dir: resolved from the symlink the linker already updated.
-        # Old units dir: extracted from the previous manifest (not yet overwritten).
+        # Manage user service lifecycle via sd-switch.
+        # sd-switch diffs old vs new unit directories and handles start/stop/restart/reload,
+        # including X-Restart-Triggers, X-Reload-Triggers, X-SwitchMethod, and RefuseManualStart.
         _new_units="$(readlink "$HOME/.config/systemd/user" 2>/dev/null || true)"
         _old_manifest="/var/lib/eigenhome/manifest-$(id -un).json"
 
         if [ -n "$_new_units" ] && [ -d "$_new_units" ]; then
           _old_units=""
           if [ -f "$_old_manifest" ]; then
-            _old_units="$(${pkgs.jq}/bin/jq -r \
+            _maybe_old="$(${pkgs.jq}/bin/jq -r \
               '.files[] | select(.target | endswith("/.config/systemd/user")) | .source' \
               "$_old_manifest" 2>/dev/null || true)"
+            if [ -n "$_maybe_old" ] && [ -d "$_maybe_old" ]; then
+              _old_units="$_maybe_old"
+            fi
           fi
 
-          if [ -z "$_old_units" ] || [ ! -d "$_old_units" ]; then
-            # First activation or no previous units: start all non-template services.
-            for _f in "$_new_units"/*.service; do
-              [ -f "$_f" ] || continue
-              _unit="$(basename "$_f")"
-              case "$_unit" in *@.service) continue ;; esac
-              systemctl --user start "$_unit" 2>/dev/null || true
-            done
-          elif [ "$_old_units" != "$_new_units" ]; then
-            # Units dir changed: diff services and act accordingly.
-            {
-              (cd "$_old_units" && ls *.service 2>/dev/null || true)
-              (cd "$_new_units" && ls *.service 2>/dev/null || true)
-            } | grep -v '@\.service$' | sort -u | while read -r _unit; do
-              _old_file="$_old_units/$_unit"
-              _new_file="$_new_units/$_unit"
-
-              if [ ! -f "$_new_file" ]; then
-                # Service removed: stop if running.
-                systemctl --user stop "$_unit" 2>/dev/null || true
-              elif [ ! -f "$_old_file" ]; then
-                # Service added: start it.
-                systemctl --user start "$_unit" 2>/dev/null || true
-              elif ! cmp --quiet "$_old_file" "$_new_file" 2>/dev/null; then
-                # Service changed: restart if currently active.
-                if systemctl --user is-active --quiet "$_unit" 2>/dev/null; then
-                  systemctl --user restart "$_unit" || true
-                fi
-              fi
-            done
-          fi
+          ${pkgs.sd-switch}/bin/sd-switch \
+            ''${_old_units:+--old-units "$_old_units"} \
+            --new-units "$_new_units" || true
         fi
       '';
     };
