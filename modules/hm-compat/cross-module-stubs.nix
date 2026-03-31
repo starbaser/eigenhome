@@ -79,12 +79,6 @@ in {
       description = "Input method config (accepted for compat).";
     };
 
-    # xsession — X11 session config (accept and discard on Wayland).
-    xsession = mkOption {
-      type = types.submodule {freeformType = types.attrsOf types.anything;};
-      default = {};
-      description = "Stub for HM xsession.* namespace (not bridged on Wayland).";
-    };
 
     # Fontconfig defaults — consumed by fontconfig-bridge.nix.
     fonts.fontconfig = mkOption {
@@ -107,18 +101,6 @@ in {
       description = "Stub for HM xresources namespace (not bridged on Wayland).";
     };
 
-    # Wayland compositor options — safety net for disabled targets.
-    wayland.systemd.target = mkOption {
-      type = types.str;
-      default = "graphical-session.target";
-      description = "Wayland systemd session target (compat stub for HM service modules).";
-    };
-
-    wayland.windowManager = mkOption {
-      type = types.submodule {freeformType = types.attrsOf types.anything;};
-      default = {};
-      description = "Stub for HM wayland.windowManager.* namespace.";
-    };
 
     # dbus — ghostty and other modules set dbus.packages.
     dbus = mkOption {

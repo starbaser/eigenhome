@@ -16,6 +16,8 @@ in {
     ./activation-runner.nix
     ./systemd-bridge.nix
     ./cross-module-stubs.nix
+    (wrapHmModule "${hmSrc}/modules/xsession.nix")
+    (wrapHmModule "${hmSrc}/modules/wayland.nix")
     (import ./programs-stubs.nix {inherit hmSrc wrapHmModule;})
     (import ./services-stubs.nix {inherit hmSrc wrapHmModule;})
     ./cursor-bridge.nix

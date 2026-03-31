@@ -37,4 +37,6 @@ in {
   yazi = callTest ./yazi.nix {};
   starship-rum = callTest ./starship-rum.nix {};
   services-stub = callTest ./services-stub.nix {};
+  window-managers = callTest ./window-managers.nix {};
+  sd-switch = callTest ./sd-switch.nix {};
 }

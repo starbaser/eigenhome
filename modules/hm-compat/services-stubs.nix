@@ -13,12 +13,7 @@
 {hmSrc, wrapHmModule}:
 {lib, ...}: let
   # Services declared with typed options in other modules — skip these.
-  alreadyDeclared = [
-    # Declares wayland.windowManager.{sway,hyprland,...} and xsession.windowManager.*
-    # typed options that conflict with the freeform stubs in cross-module-stubs.nix.
-    # Window manager programs are already handled by programs-stubs.nix (hyprland, etc.).
-    "window-managers"
-  ];
+  alreadyDeclared = [];
 
   # No known third-party service modules (not present in HM source).
   thirdParty = [];
