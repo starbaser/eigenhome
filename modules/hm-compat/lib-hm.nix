@@ -5,6 +5,7 @@
   ...
 }: {
   _module.args = {
+    lib = hmExtLib;
     hmLib = hmExtLib.hm;
     inherit hmExtLib;
     hmSrc = "${home-manager}";
