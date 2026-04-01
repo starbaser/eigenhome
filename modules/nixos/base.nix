@@ -98,15 +98,17 @@ with open(sys.argv[1], "w") as f:
   eigenhomeSubmodule = submoduleWith {
     description = "eigenhome submodule for NixOS";
     class = "eigenhome";
-    specialArgs =
-      cfg.specialArgs
-      // {
+    specialArgs = let
+      baseArgs = cfg.specialArgs // {
         inherit hjem-lib osConfig pkgs utils;
         clobberByDefault = cfg.clobberByDefault;
         nixosConfig = osConfig;
         darwinConfig = null;
         osOptions = options;
       };
+    in baseArgs // optionalAttrs (baseArgs ? hmExtLib) {
+      lib = baseArgs.hmExtLib;
+    };
     modules =
       concatLists
       [

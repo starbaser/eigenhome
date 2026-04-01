@@ -44,6 +44,7 @@
         imports = [
           coreModules.eigenhome
           ./nixos/activation.nix
+          {config.eigenhome.specialArgs.hmExtLib = hmExtLib;}
         ];
       };
       hjem-compat = ./modules/nixos/hjem-compat.nix;
