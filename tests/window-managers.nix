@@ -2,14 +2,14 @@
 # Verifies that Wayland WMs (hyprland, sway) and X11 WMs (i3) coexist without
 # option merge conflicts after replacing freeform stubs with typed module imports.
 {
-  eigenhomeModule,
+  nixosModule,
   eigenhomeHmCompat,
   eigenhomeTest,
 }:
   eigenhomeTest {
     name = "eigenhome-window-managers";
     nodes.machine = {
-      imports = [eigenhomeModule];
+      imports = [nixosModule];
 
       users.groups.alice = {};
       users.users.alice = {

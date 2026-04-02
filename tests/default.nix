@@ -11,7 +11,7 @@
       imports = [test];
     }).config.result;
 
-  eigenhomeModule = self.nixosModules.default;
+  nixosModule = self.nixosModules.default;
   eigenhomeHmCompat = self.homeModules.hm-compat;
   eigenhomeRum = rum.hjemModules.default;
   smfh = self.packages.${pkgs.system}.smfh;
@@ -19,7 +19,7 @@
   hmSrc = "${home-manager}";
 
   callTest = pkgs.newScope {
-    inherit eigenhomeTest eigenhomeModule eigenhomeHmCompat eigenhomeRum smfh wrapHmModule hmSrc;
+    inherit eigenhomeTest nixosModule eigenhomeHmCompat eigenhomeRum smfh wrapHmModule hmSrc;
   };
 in {
   basic = callTest ./basic.nix {};

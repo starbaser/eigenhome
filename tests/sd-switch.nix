@@ -2,7 +2,7 @@
 # Verifies services start on first activation, restart when config changes,
 # and stop when removed — using specialisation-based config switching.
 {
-  eigenhomeModule,
+  nixosModule,
   eigenhomeHmCompat,
   eigenhomeTest,
   smfh,
@@ -14,7 +14,7 @@ in
   eigenhomeTest {
     name = "eigenhome-sd-switch";
     nodes.node1 = {
-      imports = [eigenhomeModule];
+      imports = [nixosModule];
 
       nix.enable = false;
 

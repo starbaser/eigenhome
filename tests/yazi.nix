@@ -1,6 +1,6 @@
 # Test: HM yazi module — fish shell wrapper function
 {
-  eigenhomeModule,
+  nixosModule,
   eigenhomeHmCompat,
   eigenhomeTest,
   wrapHmModule,
@@ -11,7 +11,7 @@ in
   eigenhomeTest {
     name = "eigenhome-yazi";
     nodes.machine = {
-      imports = [eigenhomeModule];
+      imports = [nixosModule];
 
       users.groups.alice = {};
       users.users.alice = {

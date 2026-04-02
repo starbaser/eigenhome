@@ -1,6 +1,6 @@
 # Test: HM starship module with rum zsh active.
 {
-  eigenhomeModule,
+  nixosModule,
   eigenhomeRum,
   eigenhomeHmCompat,
   eigenhomeTest,
@@ -12,7 +12,7 @@ in
   eigenhomeTest {
     name = "eigenhome-starship-rum";
     nodes.machine = {
-      imports = [eigenhomeModule];
+      imports = [nixosModule];
 
       users.groups.alice = {};
       users.users.alice = {

@@ -1,13 +1,13 @@
 # Test: services-stubs evaluation — confirms HM service modules load cleanly.
 {
-  eigenhomeModule,
+  nixosModule,
   eigenhomeHmCompat,
   eigenhomeTest,
 }:
   eigenhomeTest {
     name = "eigenhome-services-stub";
     nodes.machine = {
-      imports = [eigenhomeModule];
+      imports = [nixosModule];
 
       users.groups.alice = {};
       users.users.alice = {

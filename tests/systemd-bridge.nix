@@ -1,6 +1,6 @@
 # Test: systemd.user bridge generates correct INI unit files via eigenhome.
 {
-  eigenhomeModule,
+  nixosModule,
   eigenhomeHmCompat,
   eigenhomeTest,
 }: let
@@ -9,7 +9,7 @@ in
   eigenhomeTest {
     name = "eigenhome-systemd-bridge";
     nodes.machine = {
-      imports = [eigenhomeModule];
+      imports = [nixosModule];
 
       users.groups.alice = {};
       users.users.alice = {

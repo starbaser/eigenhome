@@ -1,6 +1,6 @@
 # Test: Activation DAG runner — custom entries execute, HM built-in phases filtered.
 {
-  eigenhomeModule,
+  nixosModule,
   eigenhomeHmCompat,
   eigenhomeTest,
 }: let
@@ -9,7 +9,7 @@ in
   eigenhomeTest {
     name = "eigenhome-activation";
     nodes.machine = {
-      imports = [eigenhomeModule];
+      imports = [nixosModule];
 
       users.groups.alice = {};
       users.users.alice = {

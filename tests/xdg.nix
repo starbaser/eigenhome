@@ -1,5 +1,5 @@
 {
-  eigenhomeModule,
+  nixosModule,
   eigenhomeTest,
   lib,
   formats,
@@ -11,7 +11,7 @@ in
     name = "eigenhome-xdg";
     nodes = {
       node1 = {
-        imports = [eigenhomeModule];
+        imports = [nixosModule];
 
         users.groups.alice = {};
         users.users.alice = {

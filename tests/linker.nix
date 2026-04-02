@@ -1,5 +1,5 @@
 {
-  eigenhomeModule,
+  nixosModule,
   eigenhomeTest,
   smfh,
 }: let
@@ -10,7 +10,7 @@ in
     name = "eigenhome-linker";
     nodes = {
       node1 = {
-        imports = [eigenhomeModule];
+        imports = [nixosModule];
 
         nix.enable = false;
 

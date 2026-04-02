@@ -1,6 +1,6 @@
 # Test: HM starship module (standalone, no rum)
 {
-  eigenhomeModule,
+  nixosModule,
   eigenhomeHmCompat,
   eigenhomeTest,
   wrapHmModule,
@@ -11,7 +11,7 @@ in
   eigenhomeTest {
     name = "eigenhome-starship";
     nodes.machine = {
-      imports = [eigenhomeModule];
+      imports = [nixosModule];
 
       users.groups.alice = {};
       users.users.alice = {

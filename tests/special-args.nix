@@ -1,5 +1,5 @@
 {
-  eigenhomeModule,
+  nixosModule,
   eigenhomeTest,
   hello,
 }: let
@@ -9,7 +9,7 @@ in
     name = "eigenhome-special-args";
     nodes = {
       node1 = {
-        imports = [eigenhomeModule];
+        imports = [nixosModule];
 
         users.groups.alice = {};
         users.users.alice = {

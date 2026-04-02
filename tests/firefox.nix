@@ -1,7 +1,7 @@
 # Test: HM Firefox module — profiles.ini, user.js, userChrome/userContent.css
 {
   pkgs,
-  eigenhomeModule,
+  nixosModule,
   eigenhomeHmCompat,
   eigenhomeTest,
   wrapHmModule,
@@ -12,7 +12,7 @@ in
   eigenhomeTest {
     name = "eigenhome-firefox";
     nodes.machine = {
-      imports = [eigenhomeModule];
+      imports = [nixosModule];
 
       users.groups.alice = {};
       users.users.alice = {

@@ -1,5 +1,5 @@
 {
-  eigenhomeModule,
+  nixosModule,
   eigenhomeTest,
   lib,
   formats,
@@ -57,7 +57,7 @@ in
           };
         };
       in {
-        imports = [eigenhomeModule];
+        imports = [nixosModule];
 
         nix.enable = false;
 
