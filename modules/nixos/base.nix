@@ -115,6 +115,7 @@ with open(sys.argv[1], "w") as f:
         [
           ../common/user.nix
           ./systemd.nix
+          {_module.args.pkgs = mkDefault pkgs;}
           ({
             config,
             name,
