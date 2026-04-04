@@ -43,6 +43,20 @@ in
       };
 
       specialisation = {
+        triggeredRestart.configuration = {
+          eigenhome.users.${user}.systemd.user.services.test-daemon = pkgs.lib.mkForce {
+            Unit = {
+              Description = "sd-switch test daemon";
+              "X-Restart-Triggers" = [(pkgs.writeText "trigger-v1" "config-changed")];
+            };
+            Service = {
+              Type = "simple";
+              ExecStart = "${pkgs.coreutils}/bin/sleep infinity";
+            };
+            Install.WantedBy = ["default.target"];
+          };
+        };
+
         changedService.configuration = {
           eigenhome.users.${user}.systemd.user.services.test-daemon = pkgs.lib.mkForce {
             Unit.Description = "sd-switch test daemon (changed)";
@@ -79,6 +93,18 @@ in
               "systemctl --user show test-daemon.service -p MainPID --value"
           ).strip()
           assert pid1 != "" and pid1 != "0", f"Invalid PID after first activation: {pid1}"
+
+      with subtest("Restart triggers cause service restart"):
+          node1.succeed("${specialisations}/triggeredRestart/bin/switch-to-configuration test")
+          node1.wait_until_succeeds(
+              "sudo -u ${user} XDG_RUNTIME_DIR=/run/user/1000 "
+              "systemctl --user is-active test-daemon.service"
+          )
+          pid_trigger = node1.succeed(
+              "sudo -u ${user} XDG_RUNTIME_DIR=/run/user/1000 "
+              "systemctl --user show test-daemon.service -p MainPID --value"
+          ).strip()
+          assert pid1 != pid_trigger, f"restartTriggers did not cause restart: PID stayed {pid1}"
 
       with subtest("Changed service gets restarted"):
           node1.succeed("${specialisations}/changedService/bin/switch-to-configuration test")

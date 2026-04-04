@@ -18,6 +18,7 @@
     concatStringsSep
     filterAttrs
     isBool
+    literalExpression
     mapAttrs
     mapAttrs'
     mkEnableOption
@@ -41,9 +42,46 @@
     types.package
   ];
 
+  freeformUnitType =
+    types.attrsOf (types.attrsOf (types.either primitive (types.listOf primitive)));
+
+  # Base unit submodule shared by all unit types (timer, path, socket, etc.).
   unitModule = types.submodule {
-    freeformType =
-      types.attrsOf (types.attrsOf (types.either primitive (types.listOf primitive)));
+    freeformType = freeformUnitType;
+  };
+
+  # Service-specific submodule — extends the freeform base with typed options
+  # matching HM's serviceType for proper list merging and sd-switch lifecycle.
+  serviceModule = types.submodule {
+    freeformType = freeformUnitType;
+
+    options.Unit = {
+      X-Restart-Triggers = mkOption {
+        type = with types; listOf (either package str);
+        default = [];
+        example = literalExpression ''[ config.xdg.configFile."service.conf".source ]'';
+        description = "List of store paths that trigger a service restart when changed.";
+      };
+
+      X-Reload-Triggers = mkOption {
+        type = with types; listOf (either package str);
+        default = [];
+        example = literalExpression ''[ config.xdg.configFile."service.conf".source ]'';
+        description = "List of store paths that trigger a service reload when changed.";
+      };
+
+      X-SwitchMethod = mkOption {
+        type = types.enum [
+          null
+          "reload"
+          "restart"
+          "stop-start"
+          "keep-old"
+        ];
+        default = null;
+        description = "Preferred method for sd-switch when transitioning service versions.";
+      };
+    };
   };
 
   # INI text generation matching HM's toSystemdIni.
@@ -104,7 +142,7 @@ in {
       };
 
     services = mkOption {
-      type = types.attrsOf unitModule;
+      type = types.attrsOf serviceModule;
       default = {};
       description = "Definition of systemd per-user service units.";
     };
