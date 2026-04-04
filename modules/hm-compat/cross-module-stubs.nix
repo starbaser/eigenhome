@@ -71,15 +71,6 @@ in {
       description = "Stub for HM nixpkgs namespace (overlays applied at NixOS level).";
     };
 
-    # i18n — input method framework (fcitx5, etc.). Stylix's fcitx5 target
-    # writes here even when disabled (mkIf false still requires option path).
-    i18n = mkOption {
-      type = types.attrsOf types.anything;
-      default = {};
-      description = "Input method config (accepted for compat).";
-    };
-
-
     # Fontconfig defaults — consumed by fontconfig-bridge.nix.
     fonts.fontconfig = mkOption {
       type = types.attrsOf types.anything;

@@ -43,10 +43,6 @@
     # vte reads config.programs.zsh.enableVteIntegration — cycle through
     # shell-bridge → programs.zsh → vte → programs.zsh.
     "vte"
-    # gtk and qt declare typed options (gtk.enable, qt.enable) that conflict
-    # with Stylix's own declarations of the same options.
-    "gtk"
-    "qt"
     "xdg"
     "xdg-autostart"
     "xdg-desktop-entries"

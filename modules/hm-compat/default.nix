@@ -16,8 +16,16 @@ in {
     ./activation-runner.nix
     ./systemd-bridge.nix
     ./cross-module-stubs.nix
+    # HM modules explicitly listed in modules/modules.nix (not auto-discovered).
+    # Matches HM's convention: accounts, config, i18n, targets, and top-level modules.
+    (wrapHmModule "${hmSrc}/modules/accounts/calendar.nix")
+    (wrapHmModule "${hmSrc}/modules/accounts/contacts.nix")
+    (wrapHmModule "${hmSrc}/modules/accounts/email.nix")
+    (wrapHmModule "${hmSrc}/modules/config/i18n.nix")
+    (wrapHmModule "${hmSrc}/modules/i18n/input-method/default.nix")
     (wrapHmModule "${hmSrc}/modules/xsession.nix")
     (wrapHmModule "${hmSrc}/modules/wayland.nix")
+    # Auto-discovered HM module directories.
     (import ./misc-stubs.nix {inherit hmSrc wrapHmModule;})
     (import ./programs-stubs.nix {inherit hmSrc wrapHmModule;})
     (import ./services-stubs.nix {inherit hmSrc wrapHmModule;})
