@@ -26,7 +26,12 @@
   wrapImport = mod:
     if builtins.isPath mod || builtins.isString mod then
       let
-        key = "hm-compat:${toString mod}";
+        # Normalize key to relative path so the same HM module loaded from
+        # different store paths (eigenhome's HM vs Stylix's HM) deduplicates.
+        key = let
+          s = toString mod;
+          m = builtins.match ".*/modules/(.*)" s;
+        in "hm-compat:modules/${if m != null then builtins.head m else s}";
         imported = import mod;
       in
         if builtins.isFunction imported then
