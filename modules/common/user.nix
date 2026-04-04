@@ -49,7 +49,7 @@
       }
     ]) (filterAttrs (_: f: f.enable) files));
 in {
-  _class = "eigenhome";
+  _class = "homeManager";
 
   imports = [
     # Makes "assertions" option available without having to duplicate the work

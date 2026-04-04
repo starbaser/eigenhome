@@ -97,7 +97,7 @@ with open(sys.argv[1], "w") as f:
 
   eigenhomeSubmodule = submoduleWith {
     description = "eigenhome submodule for NixOS";
-    class = "eigenhome";
+    class = "homeManager";
     specialArgs = let
       baseArgs = cfg.specialArgs // {
         inherit hjem-lib osConfig pkgs utils;

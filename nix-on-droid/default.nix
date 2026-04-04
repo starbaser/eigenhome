@@ -71,7 +71,7 @@
 
   eigenhomeSubmodule = submoduleWith {
     description = "eigenhome submodule for nix-on-droid";
-    class = "eigenhome";
+    class = "homeManager";
     specialArgs =
       cfg.specialArgs
       // {
