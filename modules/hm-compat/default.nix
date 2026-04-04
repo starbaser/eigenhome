@@ -18,6 +18,7 @@ in {
     ./cross-module-stubs.nix
     (wrapHmModule "${hmSrc}/modules/xsession.nix")
     (wrapHmModule "${hmSrc}/modules/wayland.nix")
+    (import ./misc-stubs.nix {inherit hmSrc wrapHmModule;})
     (import ./programs-stubs.nix {inherit hmSrc wrapHmModule;})
     (import ./services-stubs.nix {inherit hmSrc wrapHmModule;})
     ./cursor-bridge.nix
