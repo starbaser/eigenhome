@@ -6,20 +6,29 @@
 #
 # nix-on-droid is single-user and has no systemd. File deployment is done via
 # activation scripts, and systemd services are translated to wrapper scripts.
-{eigenhome}: {
+{ eigenhome }:
+{
   config,
   lib,
   pkgs,
   options,
   ...
-}: let
+}:
+let
   inherit (builtins) concatLists;
   inherit (lib.attrsets) filterAttrs mapAttrsToList;
   inherit (lib.modules) mkDefault mkIf mkMerge;
   inherit (lib.options) literalExpression mkOption;
-  inherit (lib.types) attrs attrsWith bool listOf raw submoduleWith;
+  inherit (lib.types)
+    attrs
+    attrsWith
+    bool
+    listOf
+    raw
+    submoduleWith
+    ;
 
-  hjem-lib = import "${eigenhome}/lib" {inherit lib pkgs;};
+  hjem-lib = import "${eigenhome}/lib" { inherit lib pkgs; };
 
   cfg = config.eigenhome;
   enabledUsers = filterAttrs (_: u: u.enable) cfg.users;
@@ -29,78 +38,83 @@
   # eigenhome's modules/nixos/systemd.nix depends on NixOS-only utils.systemdUtils,
   # so we provide lightweight stubs that absorb writes from eigenhome's
   # systemd-bridge without generating unit files.
-  systemdStub = {lib, ...}: let
-    inherit (lib) mkEnableOption mkOption;
-    inherit (lib.types) anything attrsOf;
-  in {
-    options.systemd = {
-      enable =
-        mkEnableOption "systemd unit management (stubbed on nix-on-droid)"
-        // {default = false;};
-      units = mkOption {
-        type = attrsOf anything;
-        default = {};
-        internal = true;
-      };
-      services = mkOption {
-        type = attrsOf anything;
-        default = {};
-      };
-      timers = mkOption {
-        type = attrsOf anything;
-        default = {};
-      };
-      paths = mkOption {
-        type = attrsOf anything;
-        default = {};
-      };
-      sockets = mkOption {
-        type = attrsOf anything;
-        default = {};
-      };
-      targets = mkOption {
-        type = attrsOf anything;
-        default = {};
-      };
-      slices = mkOption {
-        type = attrsOf anything;
-        default = {};
+  systemdStub =
+    { lib, ... }:
+    let
+      inherit (lib) mkEnableOption mkOption;
+      inherit (lib.types) anything attrsOf;
+    in
+    {
+      options.systemd = {
+        enable = mkEnableOption "systemd unit management (stubbed on nix-on-droid)" // {
+          default = false;
+        };
+        units = mkOption {
+          type = attrsOf anything;
+          default = { };
+          internal = true;
+        };
+        services = mkOption {
+          type = attrsOf anything;
+          default = { };
+        };
+        timers = mkOption {
+          type = attrsOf anything;
+          default = { };
+        };
+        paths = mkOption {
+          type = attrsOf anything;
+          default = { };
+        };
+        sockets = mkOption {
+          type = attrsOf anything;
+          default = { };
+        };
+        targets = mkOption {
+          type = attrsOf anything;
+          default = { };
+        };
+        slices = mkOption {
+          type = attrsOf anything;
+          default = { };
+        };
       };
     };
-  };
 
   eigenhomeSubmodule = submoduleWith {
     description = "eigenhome submodule for nix-on-droid";
     class = "homeManager";
-    specialArgs =
-      cfg.specialArgs
-      // {
-        inherit hjem-lib pkgs;
-        osConfig = config;
-        nixosConfig = null;
-        darwinConfig = null;
-        osOptions = options;
-      };
-    modules =
-      [
-        "${eigenhome}/modules/common/user.nix"
-        systemdStub
-        ./service-bridge.nix
-        ({...}: {
+    specialArgs = cfg.specialArgs // {
+      inherit hjem-lib pkgs;
+      clobberByDefault = cfg.clobberByDefault;
+      osConfig = config;
+      nixosConfig = null;
+      darwinConfig = null;
+      osOptions = options;
+    };
+    modules = [
+      "${eigenhome}/modules/common/user.nix"
+      systemdStub
+      ./service-bridge.nix
+      (
+        { ... }:
+        {
           user = mkDefault config.user.userName;
           directory = mkDefault config.user.home;
-        })
-      ]
-      ++ cfg.extraModules;
+        }
+      )
+    ]
+    ++ cfg.extraModules;
   };
-in {
+in
+{
   imports = [
     ./file-activation.nix
   ];
 
   options.eigenhome = {
     users = mkOption {
-      default = {};
+      default = { };
       type = attrsWith {
         elemType = eigenhomeSubmodule;
         placeholder = "username";
@@ -110,7 +124,7 @@ in {
 
     extraModules = mkOption {
       type = listOf raw;
-      default = [];
+      default = [ ];
       description = ''
         Additional modules evaluated under each user in {option}`eigenhome.users`.
       '';
@@ -118,49 +132,52 @@ in {
 
     specialArgs = mkOption {
       type = attrs;
-      default = {};
+      default = { };
       example = literalExpression "{ inherit inputs; }";
       description = ''
         Additional `specialArgs` passed to all eigenhome user modules.
       '';
     };
+
+    clobberByDefault = mkOption {
+      type = bool;
+      default = false;
+      description = ''
+        Whether files managed by eigenhome should overwrite existing files by
+        default. Users may override this with
+        {option}`eigenhome.users.<username>.clobberFiles`.
+      '';
+    };
   };
 
-  config = mkIf (enabledUsers != {}) {
-    environment.packages =
-      concatLists (mapAttrsToList (_: u: u.packages) enabledUsers);
+  config = mkIf (enabledUsers != { }) {
+    environment.packages = concatLists (mapAttrsToList (_: u: u.packages) enabledUsers);
 
-    environment.sessionVariables =
-      mkMerge (mapAttrsToList (_: u: u.environment.sessionVariables) enabledUsers);
+    environment.sessionVariables = mkMerge (
+      mapAttrsToList (_: u: u.environment.sessionVariables) enabledUsers
+    );
 
-    build.activation =
-      mkMerge (mapAttrsToList (_: u: u._nodOneshotActivations) enabledUsers);
+    build.activation = mkMerge (mapAttrsToList (_: u: u._nodOneshotActivations) enabledUsers);
 
-    assertions =
-      concatLists
-      (mapAttrsToList (
-          user: userCfg:
-            map ({
-              assertion,
-              message,
-              ...
-            }: {
-              inherit assertion;
-              message = "${user} profile: ${message}";
-            })
-            userCfg.assertions
-        )
-        enabledUsers);
+    assertions = concatLists (
+      mapAttrsToList (
+        user: userCfg:
+        map (
+          {
+            assertion,
+            message,
+            ...
+          }:
+          {
+            inherit assertion;
+            message = "${user} profile: ${message}";
+          }
+        ) userCfg.assertions
+      ) enabledUsers
+    );
 
-    warnings =
-      concatLists
-      (mapAttrsToList (
-          user: v:
-            map (
-              warning: "${user} profile: ${warning}"
-            )
-            v.warnings
-        )
-        enabledUsers);
+    warnings = concatLists (
+      mapAttrsToList (user: v: map (warning: "${user} profile: ${warning}") v.warnings) enabledUsers
+    );
   };
 }
