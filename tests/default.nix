@@ -24,6 +24,7 @@
 in {
   basic = callTest ./basic.nix {};
   linker = callTest ./linker.nix {};
+  copy-gating = callTest ./copy-gating.nix {};
   xdg = callTest ./xdg.nix {};
   xdg-linker = callTest ./xdg-linker.nix {};
   special-args = callTest ./special-args.nix {};

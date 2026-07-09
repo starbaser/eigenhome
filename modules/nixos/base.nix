@@ -205,10 +205,7 @@ in {
               User = "%i";
               Type = "oneshot";
             };
-            requires = [
-              "eigenhome-prepare.service"
-              "eigenhome-copy@%i.service"
-            ];
+            requires = ["eigenhome-prepare.service"];
             after = ["eigenhome-prepare.service"];
             scriptArgs = "%i";
             script = let
@@ -234,6 +231,7 @@ in {
             description = "Copy the manifest into eigenhome's state directory for %i";
             enableStrictShellChecks = true;
             serviceConfig.Type = "oneshot";
+            requires = ["eigenhome-activate@%i.service"];
             after = ["eigenhome-activate@%i.service"];
             scriptArgs = "%i";
             script = ''
