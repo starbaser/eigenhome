@@ -49,13 +49,21 @@ in {
     };
 
   config = mkIf cfg.enable {
-    xdg.config.files."systemd/user".source = utils.systemdUtils.lib.generateUnits {
-      type = "user";
-      inherit (cfg) units;
-      inherit (osConfig.systemd) package;
-      packages = [];
-      upstreamUnits = [];
-      upstreamWants = [];
+    # The whole systemd/user directory is a symlink to an eigenhome-generated
+    # store path; users cannot add units there. It must be clobbered on every
+    # activation, otherwise the linker refuses to replace the existing symlink
+    # and user units go stale after the first generation (they only update on a
+    # reboot that clears the symlink).
+    xdg.config.files."systemd/user" = {
+      source = utils.systemdUtils.lib.generateUnits {
+        type = "user";
+        inherit (cfg) units;
+        inherit (osConfig.systemd) package;
+        packages = [];
+        upstreamUnits = [];
+        upstreamWants = [];
+      };
+      clobber = true;
     };
 
     systemd.units = pipe unitTypes [
