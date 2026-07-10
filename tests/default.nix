@@ -14,7 +14,7 @@
   nixosModule = self.nixosModules.default;
   eigenhomeHmCompat = self.homeModules.hm-compat;
   eigenhomeRum = rum.hjemModules.default;
-  smfh = self.packages.${pkgs.system}.smfh;
+  smfh = self.packages.${pkgs.stdenv.hostPlatform.system}.smfh;
   wrapHmModule = import ../modules/hm-compat/wrap-hm-module.nix {inherit hmExtLib;};
   hmSrc = "${home-manager}";
 

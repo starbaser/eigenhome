@@ -1,7 +1,6 @@
 {
   nixosModule,
   eigenhomeTest,
-  smfh,
 }: let
   user = "alice";
   userHome = "/home/${user}";
@@ -22,7 +21,6 @@ in
         };
 
         eigenhome = {
-          linker = smfh;
           users = {
             ${user} = {
               enable = false;

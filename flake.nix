@@ -34,7 +34,7 @@
     hmExtLib = nixpkgs.lib.extend (self: _super: {
       hm = import "${home-manager}/modules/lib" {lib = self;};
     });
-    coreModules = import ./modules/nixos;
+    coreModules = import ./modules/nixos {inherit smfh;};
   in {
     nixosModules = {
       inherit (coreModules) eigenhome hjem-lib;

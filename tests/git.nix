@@ -29,14 +29,16 @@ in
 
         programs.git = {
           enable = true;
-          userName = "Alice Test";
-          userEmail = "alice@example.com";
           ignores = ["*.swp" ".direnv"];
-          aliases = {
-            co = "checkout";
-            st = "status";
-          };
-          extraConfig = {
+          settings = {
+            user = {
+              name = "Alice Test";
+              email = "alice@example.com";
+            };
+            alias = {
+              co = "checkout";
+              st = "status";
+            };
             core.editor = "vim";
             pull.rebase = true;
           };

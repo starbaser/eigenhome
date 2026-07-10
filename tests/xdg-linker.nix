@@ -3,7 +3,6 @@
   eigenhomeTest,
   lib,
   formats,
-  smfh,
   writeText,
 }: let
   userHome = "/home/alice";
@@ -69,7 +68,6 @@ in
         };
 
         eigenhome = {
-          linker = smfh;
           users = {
             alice = {
               enable = true;

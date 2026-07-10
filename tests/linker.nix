@@ -9,10 +9,17 @@ in
   eigenhomeTest {
     name = "eigenhome-linker";
     nodes = {
-      node1 = {
+      node1 = {config, ...}: {
         imports = [nixosModule];
 
         nix.enable = false;
+
+        assertions = [
+          {
+            assertion = config.eigenhome.linker == smfh;
+            message = "eigenhome must default to its flake-pinned smfh package";
+          }
+        ];
 
         users.groups.${user} = {};
         users.users.${user} = {
@@ -22,7 +29,6 @@ in
         };
 
         eigenhome = {
-          linker = smfh;
           users = {
             ${user} = {
               enable = true;
@@ -33,6 +39,10 @@ in
         specialisation = {
           fileGetsLinked.configuration = {
             eigenhome.users.${user}.files.".config/foo".text = "Hello world!";
+          };
+
+          fileGetsUpdated.configuration = {
+            eigenhome.users.${user}.files.".config/foo".text = "Hello updated world!";
           };
 
           fileGetsOverwritten.configuration = {
@@ -84,6 +94,11 @@ in
         node1.succeed("${specialisations}/fileGetsLinked/bin/switch-to-configuration test")
         node1.succeed("test -L ${userHome}/.config/foo")
         node1.succeed("grep \"Hello world!\" ${userHome}/.config/foo")
+
+      with subtest("Managed file gets updated without clobber"):
+        node1.succeed("${specialisations}/fileGetsUpdated/bin/switch-to-configuration test")
+        node1.succeed("test -L ${userHome}/.config/foo")
+        node1.succeed("grep \"Hello updated world!\" ${userHome}/.config/foo")
 
       with subtest("File gets overwritten when changed"):
         node1.succeed("${specialisations}/fileGetsLinked/bin/switch-to-configuration test")

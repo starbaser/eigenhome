@@ -5,7 +5,6 @@
   nixosModule,
   eigenhomeHmCompat,
   eigenhomeTest,
-  smfh,
   pkgs,
 }: let
   user = "alice";
@@ -26,7 +25,6 @@ in
       };
 
       eigenhome = {
-        linker = smfh;
         users.${user} = {
           enable = true;
           imports = [eigenhomeHmCompat];

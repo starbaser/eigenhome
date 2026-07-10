@@ -32,6 +32,7 @@ in
 
         programs.firefox = {
           enable = true;
+          configPath = ".mozilla/firefox";
           profiles.test-profile = {
             isDefault = true;
             settings = {

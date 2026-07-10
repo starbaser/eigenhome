@@ -1,7 +1,6 @@
 {
   nixosModule,
   eigenhomeTest,
-  smfh,
 }: let
   user = "alice";
   userHome = "/home/${user}";
@@ -23,7 +22,6 @@ in
         };
 
         eigenhome = {
-          linker = smfh;
           users.${user} = {
             enable = true;
             files.".config/foo".text = "managed content";
