@@ -20,6 +20,7 @@
     inherit pkgs;
     homeDirectory = config.home.homeDirectory;
   };
+  hmRelease = (builtins.fromJSON (builtins.readFile "${hmSrc}/release.json")).release;
 in {
   options.home = {
     file = mkOption {
@@ -85,7 +86,7 @@ in {
     version = {
       release = mkOption {
         type = types.str;
-        default = "26.05";
+        default = hmRelease;
         readOnly = true;
         description = "HM release version for Stylix compatibility checks.";
       };
