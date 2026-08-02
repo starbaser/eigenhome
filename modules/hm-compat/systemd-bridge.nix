@@ -141,6 +141,17 @@ in {
         default = pkgs.stdenv.isLinux;
       };
 
+    packages = mkOption {
+      type = types.listOf types.package;
+      default = [];
+      description = ''
+        Packages providing systemd user units.
+
+        Files in `«pkg»/share/systemd/user` will be included in the user's
+        `$XDG_DATA_HOME/systemd/user` directory.
+      '';
+    };
+
     services = mkOption {
       type = types.attrsOf serviceModule;
       default = {};
@@ -220,6 +231,15 @@ in {
   };
 
   config = mkIf cfg.enable {
+    xdg.data.files."systemd/user" = mkIf (cfg.packages != []) {
+      source = pkgs.symlinkJoin {
+        name = "user-systemd-units";
+        paths = cfg.packages;
+        stripPrefix = "/share/systemd/user";
+      };
+      recursive = true;
+    };
+
     systemd.units = mkIf hasAnyUnits (mkMerge [
       (mkUnits "service" cfg.services)
       (mkUnits "timer" cfg.timers)

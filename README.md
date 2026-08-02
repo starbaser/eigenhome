@@ -314,7 +314,7 @@ Programs with upstream HM modules are imported via `wrapHmModule`. Programs decl
 \*\*\* Provided by external flake (e.g., [`firefox-config`](https://github.com/starbaser/firefox-config))
 † Freeform stub (no upstream HM module)
 
-Additional HM options supported: `home.file`, `home.packages`, `home.sessionVariables`, `home.activation`, `xdg.configFile`, `xdg.dataFile`, `systemd.user.services`, `systemd.user.timers`.
+Additional HM options supported: `home.file`, `home.packages`, `home.sessionVariables`, `home.activation`, `xdg.configFile`, `xdg.dataFile`, `systemd.user.packages`, `systemd.user.services`, `systemd.user.timers`.
 
 ## Rum Integration
 
@@ -463,6 +463,6 @@ The same pattern applies to other formats: `lib.generators.toTOML {}` → `text 
 ## Testing
 
 ```bash
-nix flake check                                    # all 14 tests
+nix flake check                                    # all 18 tests
 nix build .#checks.x86_64-linux.basic              # single test
 ```

@@ -3,8 +3,17 @@
   nixosModule,
   eigenhomeHmCompat,
   eigenhomeTest,
+  pkgs,
 }: let
   userHome = "/home/alice";
+  packagedUnit = pkgs.writeTextDir "share/systemd/user/test-packaged.service" ''
+    [Unit]
+    Description=HM packaged user unit
+
+    [Service]
+    Type=oneshot
+    ExecStart=${pkgs.coreutils}/bin/true
+  '';
 in
   eigenhomeTest {
     name = "eigenhome-systemd-bridge";
@@ -19,9 +28,16 @@ in
       };
 
       eigenhome.linker = null;
-      eigenhome.users.alice = {
+      eigenhome.users.alice = {lib, ...}: {
         enable = true;
-        imports = [eigenhomeHmCompat];
+        imports = [
+          eigenhomeHmCompat
+
+          # Option paths are checked even when the definition itself is disabled.
+          {systemd.user.packages = lib.mkIf false [pkgs.hello];}
+        ];
+
+        systemd.user.packages = [packagedUnit];
 
         # Define a service through HM's INI-section interface.
         systemd.user.services.test-oneshot = {
@@ -67,6 +83,10 @@ in
 
       machine.succeed("test -L ${userHome}/.config/systemd/user/timers.target.wants/test-timer.timer")
 
+      machine.succeed("test -e ${userHome}/.local/share/systemd/user/test-packaged.service")
+      machine.succeed("grep 'HM packaged user unit' ${userHome}/.local/share/systemd/user/test-packaged.service")
+
       machine.succeed("sudo -u alice XDG_RUNTIME_DIR=/run/user/$(id -u alice) systemctl --user cat test-oneshot.service")
+      machine.succeed("sudo -u alice XDG_RUNTIME_DIR=/run/user/$(id -u alice) systemctl --user cat test-packaged.service")
     '';
   }
